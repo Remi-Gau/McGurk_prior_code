@@ -19,11 +19,11 @@ function [Trials] = TrialsRandom (NoiseRange, NbTrialsPerCondition, McDir, ConDi
 
 
 if (nargin < 1) || isempty(NoiseRange)==1
-    NoiseRange = linspace (0,0.8,10);
+    NoiseRange = linspace (0,0.8,14);
 end;
 
 if (nargin < 2) || isempty(NbTrialsPerCondition)==1 % 0 to hide some errors and some check-up
-	NbTrialsPerCondition = 1;
+	NbTrialsPerCondition = 6;
 end;
 
 if (nargin < 3) || isempty(McDir)==1
@@ -144,45 +144,55 @@ A {2,1} = repmat(Conditions, NbTrialsPerCondition, 1);
 
 
 % Generate a randomly ordered vector for the trial orders.
-TrialsIndices = [ randperm(length(A{1,1}))' randperm(length(A{2,1}))' randperm(length(A{3,1}))' ];
-TrialCounter = ones (1,3);
+% TrialsIndices = [ randperm(length(A{1,1}))' randperm(length(A{2,1}))' randperm(length(A{3,1}))' ];
+% TrialCounter = ones (1,3);
+
+
+StimType2Test = input('Which category to test : 1 = CON ; 2 = INC ; 3 = McGurk ? ');
 
 % ----- Randomise trials -----
 
-for i = 1:(length(A{1,1})+length(A{2,1})+length(A{3,1})) ;
+switch StimType2Test
+	case 3 
+		q = 2;
+        
+    case 1
+		q = 0; 
+        
+ 	case 2	
+		q = 1;       
+end
+   
+TrialCounter = 1;
+        
+TrialsIndices = randperm(length(A{q+1,1}));
 
-	q = floor(rand*3); % Chooses a condition
-	while TrialCounter(1,q+1) > length(A{q+1,1}) % Checks that we have not already played all the movies of this condition
-		q = floor(rand*3); 
-	end	 	
-		
-	Stim = MoviesLists{q+1,1} ( A{q+1,1} (TrialsIndices(TrialCounter(1,q+1), q+1),1) ).name;
-	
-	Mov = [MoviesDir{q+1,1} Stim];
+for i = 1:(length(A{q+1,1})) ;	 	
 
-	Sound = strcat(Mov(1:end-4), SoundType); % Notes the name of the sound file corresponding to the movie
-	
-       
-	Trials{1,1} = [Trials{1,1} ; i q A{q+1,1}(TrialsIndices(TrialCounter(1,q+1), q+1),2)]; % Notes the trial number and the Noiselevel used for this trial
-	
-	if (i==1) % Otherwise the first line of the Trials{2,1} and {3,1} matrixes will be empty rows
-	    	Trials{2,1} = char(Stim(1:end-4)); % Thus creates a first row to the stim matrix
-        	Trials{3,1} = char(Mov); % Idem but for the movie stim absolute matrix
-        	Trials{4,1} = char(Sound); % Idem but for the sound stim absolute matrix
-    	else
-            	Trials{2,1} = char(Trials{2,1},Stim(1:end-4)); % Appends the stimulus name to the stim matrix
-            	Trials{3,1} = char(Trials{3,1},Mov); % Appends the stimulus absolute path to the movie stim absolute matrix
-            	Trials{4,1} = char(Trials{4,1},Sound); % Appends the stimulus absolute path to the sound stim absolute matrix
-    	end;
-    	
-    	TrialCounter(1,q+1) = TrialCounter(1,q+1) + 1;
-	
-end;
+    Stim = MoviesLists{q+1,1} ( A{q+1,1} ( TrialsIndices(TrialCounter), 1 ) ).name;
+    Mov = [MoviesDir{q+1,1} Stim];
+    Sound = strcat(Mov(1:end-4), SoundType); % Notes the name of the sound file corresponding to the movie
+
+    Trials{1,1} = [Trials{1,1} ; i q A{q+1,1}(TrialsIndices(TrialCounter), 2 ) ]; % Notes the trial number and the Noiselevel used for this trial
+
+    if (i==1) % Otherwise the first line of the Trials{2,1} and {3,1} matrixes will be empty rows
+        Trials{2,1} = char(Stim(1:end-4)); % Thus creates a first row to the stim matrix
+        Trials{3,1} = char(Mov); % Idem but for the movie stim absolute matrix
+        Trials{4,1} = char(Sound); % Idem but for the sound stim absolute matrix
+    else
+        Trials{2,1} = char(Trials{2,1},Stim(1:end-4)); % Appends the stimulus name to the stim matrix
+        Trials{3,1} = char(Trials{3,1},Mov); % Appends the stimulus absolute path to the movie stim absolute matrix
+        Trials{4,1} = char(Trials{4,1},Sound); % Appends the stimulus absolute path to the sound stim absolute matrix
+    end;
+
+    TrialCounter = TrialCounter + 1;
+end
+
 
 fprintf('\nRandomization Done.\n\n');
 
 
-fprintf('\nThis run should last between %.0f and %.0f min.\n\n', floor( 2 * length(Trials{1,1}(:,1)) / 60 ), ceil( 3.5 * length(Trials{1,1}(:,1)) / 60) );
+fprintf('\nThis run should last %.0f min.\n\n', ceil( 2 * length(Trials{1,1}(:,1)) / 60) );
 
 fprintf('Do you want to continue?\n')
 Confirm=input('Type ok to continue. ', 's');
@@ -191,5 +201,5 @@ if ~strcmp(Confirm,'ok') % Abort experiment if too long
         return
 end
 
-
+Trials{1,1}
 
