@@ -1,3 +1,5 @@
 
 *.mat
 *.gz
+*.mov
+*.wav
