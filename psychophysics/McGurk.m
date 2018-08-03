@@ -29,7 +29,6 @@ DataDir = strcat(pwd, filesep, 'Subjects_Data');
 if Verbosity==1
 	
 	SubjID = char('RG');
-	Session = 1;
 	Run = 1;
 	
 	FileToLoad = strcat('Run_', num2str(Run),'.mat');
@@ -43,7 +42,6 @@ else
     % --------------------------%
 
 	SubjID = input('Subject''s ID? ','s');
-	Session = input('Experiment session number? ');
 	Run = input('Experiment run number? ');
 
 	% set default values for input arguments
@@ -55,7 +53,7 @@ else
 		Run = 1;
 	end
 	
-	FileToLoad = strcat('Session_', num2str(Session), '_Run_', num2str(Run),'.mat');
+	FileToLoad = strcat('Run_', num2str(Run),'.mat');
 
 	Date = clock;	
 
@@ -63,8 +61,7 @@ end
 
 
 % Basename for all file names
-SavedMat = strcat(DataDir, filesep, 'Subject_', SubjID, '_Session_', num2str(Session), '_Run_', num2str(Run), '.mat');
-
+SavedMat = strcat(DataDir, filesep, 'Subject_', SubjID, '_Run_', num2str(Run), '.mat');
 
 % Make sure the script is running on Psychtoolbox-3
 AssertOpenGL;
@@ -90,35 +87,27 @@ end
 %      Global Variables     %
 % --------------------------%
 
-BlockLength = 1:4;
-
-NbMovies=4;
 
 % Sound
 SamplingFreq = 44100;
 NbChannels = 2;
 LatBias = 0;
 
-McGurkNoiseRange = 	[.2 .05 .18 .12];
-INCNoiseRange = 	[.2 .05 .18 .12];
-CONNoiseRange = 	[.05 .12 .2 .18];
+McGurkNoiseRange = 	[repmat(0.15,1,8)];
+INCNoiseRange = 	[repmat(0.15,1,8)];
+CONNoiseRange = 	[INCNoiseRange([4 6 8 1 5 2 7 3])];
 
 % Adds some whitenoise to the sound track : 0 -> no noise; 1 -> noise level equivalent to the max intensity present in the orginql soundtrack.
 NoiseRange = [CONNoiseRange ; ... % CONGRUENT
 	      INCNoiseRange ; ... % INCONGRUENT
 	      McGurkNoiseRange];     % McGURK
 
- 
-% Stimuli file types
-MovieType = '.mov';
 
-% Stimuli directories
-ConDir = 'CongMovies';
-InconDir = 'IncongMovies';
-McDir = 'McGurkMovies';
 
 % Shorten Movie at the beginning by
-MovieBegin = 0.04*10; % in secs
+MovieBegin = 0.04*8; % in secs
+
+MovieLength = 38; % in frames
 
 if MovieBegin~=0
     SoundBegin = MovieBegin;
@@ -138,44 +127,8 @@ MovieDim2Extract = [160 110];
 
 % Horizontal Offset
 HorizonOffset = 18;
+    
 
-
-
-% Stimuli directories
-CongMoviesDir = strcat(pwd, filesep, ConDir, filesep);
-IncongMoviesDir = strcat(pwd, filesep, InconDir, filesep);
-McMoviesDir = strcat(pwd, filesep, McDir, filesep);
-
-% List the movie files in the movie folders and returns a structure
-CongMoviesDirList = dir(strcat(CongMoviesDir,'*', MovieType)); 
-IncongMoviesDirList = dir(strcat(IncongMoviesDir,'*', MovieType));
-McMoviesDirList = dir(strcat(McMoviesDir,'*', MovieType));      
-
-
-% CHECKS NOISE LEVELS
-fprintf('\n McGURK')
-for i=1:NbMovies
-	fprintf('\n Movie %s to be played with noise %.2f. \n', McMoviesDirList(i).name, McGurkNoiseRange(i)); 
-end
-fprintf('\n');
-fprintf('\n INCONGRUENT')
-for i=1:NbMovies
-	fprintf('\n Movie %s to be played with noise %.2f. \n', IncongMoviesDirList(i).name, INCNoiseRange(i)); 
-end
-fprintf('\n');
-fprintf('\n CONGRUENT')
-for i=1:NbMovies
-	fprintf('\n Movie %s to be played with noise %.2f. \n', CongMoviesDirList(i).name, CONNoiseRange(i)); 
-end
-fprintf('\n');
-Confirm = input('Are the noise level right? YES [1] or NO [0] ');
-
-if Confirm==0 % Abort experiment if overwriting was not confirmed
-	fprintf('Experiment aborted.\n')
-	return
-end
-
- 
 
 % --------------------------%
 %         Keyboard          %
@@ -194,6 +147,8 @@ ResponseBox = min(GetKeyboardIndices); % For key presses for the subject
 % Defines keys
 Esc = KbName('ESCAPE'); % Quit keyCode
 
+RespOTHER = 'space';
+
 % On the left keypad
 RespB = 'LeftControl';
 RespD = 'LeftGUI';
@@ -210,7 +165,7 @@ if MacKeyboard==ResponseBox
     RespT = 'LeftArrow';
 end
 
-ResponseTimeWindow = 0.4;
+ResponseTimeWindow = 0.6;
 
 
 % -------------------------------------------------------------------------
@@ -234,11 +189,38 @@ load (FileToLoad);
 
 NbTrials = length(Trials{1,1})
 
-
 if Verbosity==1
 	NbTrials = 50;
 end
 
+fprintf('\nThis run should last %.0f min.\n\n', ceil( 2.4 * NbTrials / 60) );
+
+
+
+% CHECKS NOISE LEVELS
+fprintf('\n McGURK')
+for i=1:NbMcMovies
+	fprintf('\n Movie %s to be played with noise %.2f. \n', McMoviesDirList(i).name, McGurkNoiseRange(i)); 
+end
+fprintf('\n');
+fprintf('\n INCONGRUENT')
+for i=1:NbIncongMovies
+	fprintf('\n Movie %s to be played with noise %.2f. \n', IncongMoviesDirList(i).name, INCNoiseRange(i)); 
+end
+fprintf('\n');
+fprintf('\n CONGRUENT')
+for i=1:NbCongMovies
+	fprintf('\n Movie %s to be played with noise %.2f. \n', CongMoviesDirList(i).name, CONNoiseRange(i)); 
+end
+fprintf('\n');
+Confirm = input('Are the noise level right? YES [1] or NO [0] ');
+
+if Confirm==0 % Abort experiment if overwriting was not confirmed
+	fprintf('Experiment aborted.\n')
+	return
+end
+
+clear McGurkNoiseRange INCNoiseRange CONNoiseRange
 
 try
   
@@ -387,12 +369,30 @@ tic
 %       TRIALS LOOPS        %
 % --------------------------%
 
+% NbTrials=6;
+
 ListenChar(2);
 
 for j=1:NbTrials
+    
+    
+    if mod(j,13)==0
+        WaitSecs(5);
+    end
+    
+    if j==round(NbTrials/2)+1
+		DrawFormattedText(win, 'Press the space bar to continue.', 'center', 'center', 255);
+        Screen('Flip', win);
+        
+        while strcmp(KbName(keyCode),RespOTHER)==0
+        [secs, keyCode, deltaSecs] = KbWait(ResponseBox);
+        KbName(keyCode)
+        end
+        
+	end;
 	
 	% Check for experiment abortion from operator
-    	[keyIsDown,secs,keyCode] = KbCheck(MacKeyboard);
+    [keyIsDown,secs,keyCode] = KbCheck(MacKeyboard);
 	if (keyIsDown==1 && keyCode(Esc))
 		break;
 	end;
@@ -420,7 +420,7 @@ for j=1:NbTrials
    	Z = A + Z;
     clear A;
     
-    Z = Z(: , SoundBegin*SamplingFreq:end);
+    Z = Z(: , round(SoundBegin*SamplingFreq):round(SoundBegin*SamplingFreq+MovieLength*0.04*SamplingFreq));
     	
    	% Fill up audio buffer with the sound
 	PsychPortAudio('FillBuffer', SoundHandle, Z);
@@ -470,7 +470,8 @@ for j=1:NbTrials
 	[tex, pts] = Screen('GetMovieImage', win, movie); % Gets the second movie frame and turns into a PTB texture
     
 	% Playback loop to play the rest of the movie, that is as long as the texture from GetMovieImage is not <= to 0
-	while tex > 0
+	% while tex > 0
+    for h=1:MovieLength
 			
 		Screen('DrawTexture', win, tex, srcRect, dstRect); % Draw the texture to the screen
 		
@@ -490,7 +491,7 @@ for j=1:NbTrials
     Screen('Flip', win);
 	
 	WaitSecs(1.6 + ResponseTimeWindow - (GetSecs - T_VisualOnset));
-
+   
 
 	
     % --------------------------%
@@ -519,27 +520,30 @@ for j=1:NbTrials
 	%  CLOSE TEX & APPENDS      %
 	% --------------------------%
        
-    	% Close the movie but before we note the number of frame dropped during
-    	% the whole presentation of the movie
-    	Screen('PlayMovie', movie, 0);
-    	Screen('CloseMovie', movie);
-          
-    	% Stop sound, collect onset timestamp of sound
-    	T_AudioOnset = PsychPortAudio('Stop', SoundHandle, 1) ;    	
+    % Close the movie but before we note the number of frame dropped during
+    % the whole presentation of the movie
+    Screen('PlayMovie', movie, 0);
+    Screen('CloseMovie', movie);
 
-    	% APPENDS RESULTS to the Trials{1,1} matrix
-    	Trials{1,1}(j,6:7) = [RT Resp];       
-        
-        
-        
-        % Saves regularly
-        if mod(j,NbTrials/10)==0
-                save (SavedMat, 'Trials', 'BlockLength', 'NbTrials', 'SubjID', 'Session', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'NoiseRange'); 
-        end;
+    % Stop sound, collect onset timestamp of sound
+    T_AudioOnset = PsychPortAudio('Stop', SoundHandle, 1) ;    	
+
+    % APPENDS RESULTS to the Trials{1,1} matrix
+    Trials{1,1}(j,5:6) = [RT Resp];       
+
+
+
+    % Saves regularly
+    if mod(j,NbTrials/10)==0
+            save(SavedMat);
+    end
+    
+    clear Z
         
 
-end;
+end
 
+toc
 
 
 % We are done we the experiment proper.
@@ -552,6 +556,7 @@ clear Screen;
 ListenChar
 
 catch
+save(SavedMat);
 KbQueueRelease(ResponseBox);
 PsychPortAudio('Close');
 ShowCursor;
@@ -559,10 +564,15 @@ sca;
 clear Screen;
 ListenChar
 psychrethrow(psychlasterror);
-end;
+end
 
-toc
 
+clear winrect win width tex srcRect secs pts ptb_RootPath ptb_ConfigPath pressed oldtimeindex movie 
+clear keyIsDown keyCode j ifi height h fps firstPress dstRect deltaSecs Z Win_W Win_H Verbosity 
+clear T_VisualOnset T_AudioOnset SoundName SoundLength SoundHandle SoundBegin ScreenID Scale 
+clear SamplingFreq ResponseTargetKeys ResponseBox Resp RT NBITS MovieOrigin MovieOrders MovieName 
+clear MovieLength LatBias MacKeyboard KeysOfInterest HorizonOffset Framerate FileToLoad FS Elevate
+clear Confirm movieduration MovieDim2Extract FrameRate
 
 % --------------------------%
 %     Sorting   Answers     %
@@ -576,65 +586,76 @@ toc
 
 KbName('UnifyKeyNames');
 
+save(SavedMat);
 
 for i=1:NbTrials
-	switch KbName( Trials{1,1}(i,7) ) % Check responses given
-		case RespB
-			if Trials{2,1}(i,8)=='B'
-				Trials{1,1}(i,8) = 1;
-			else
-				Trials{1,1}(i,8) = 0;
-			end;
-			
-		case RespD
-			if Trials{2,1}(i,8)=='D'
-				Trials{1,1}(i,8) = 1;
-			else
-				Trials{1,1}(i,8) = 0;
-			end;
-		
-        case RespG
-            if Trials{2,1}(i,8)=='G'
-                Trials{1,1}(i,8) = 1;
-            elseif Trials{1,1}(i,3)==2
-                Trials{1,1}(i,8) = 1;
-            else
-                Trials{1,1}(i,8) = 0;
-            end
 
-        case RespK
-            if Trials{2,1}(i,8)=='K'
-                Trials{1,1}(i,8) = 1;
-            elseif Trials{1,1}(i,3)==2
-                Trials{1,1}(i,8) = 1;
-            else            
-                Trials{1,1}(i,8) = 0;
-            end
-			
-		case RespP
-			if Trials{2,1}(i,8)=='P'
-				Trials{1,1}(i,8) = 1;
-			else
-				Trials{1,1}(i,8) = 0;
-			end;
-			
-		case RespT
-			if Trials{2,1}(i,8)=='T'
-				Trials{1,1}(i,8) = 1;
-			else
-				Trials{1,1}(i,8) = 0;
-			end;
-					
-		otherwise
-			Trials{1,1}(i,8) = 999;
-	end;
-end;
+	   switch KbName( Trials{1,1}(i,6) ) % Check responses given
+            case RespB
+                if Trials{2,1}(i,8)=='B'
+                    Trials{1,1}(i,7) = 1;
+                elseif Trials{1,1}(i,3)==2
+                    Trials{1,1}(i,7) = 1;                
+                else
+                    Trials{1,1}(i,7) = 0;
+                end;
 
+            case RespD
+                if Trials{2,1}(i,8)=='D'
+                    Trials{1,1}(i,7) = 1;
+                elseif Trials{1,1}(i,3)==2 & Trials{2,1}(i,8)~='B'
+                    Trials{1,1}(i,7) = 1;  
+                else
+                    Trials{1,1}(i,7) = 0;
+                end;
+
+            case RespG
+                if Trials{2,1}(i,8)=='G'
+                    Trials{1,1}(i,7) = 1;
+                elseif Trials{1,1}(i,3)==2
+                    Trials{1,1}(i,7) = 1;
+                else
+                    Trials{1,1}(i,7) = 0;
+                end
+
+            case RespK
+                if Trials{2,1}(i,8)=='K'
+                    Trials{1,1}(i,7) = 1;
+                elseif Trials{1,1}(i,3)==2
+                    Trials{1,1}(i,7) = 1;
+                else            
+                    Trials{1,1}(i,7) = 0;
+                end
+
+            case RespP
+                if Trials{2,1}(i,8)=='P'
+                    Trials{1,1}(i,7) = 1;
+                elseif Trials{1,1}(i,3)==2
+                    Trials{1,1}(i,7) = 1;                
+                else
+                    Trials{1,1}(i,7) = 0;
+                end;
+
+            case RespT
+                if Trials{2,1}(i,8)=='T'
+                    Trials{1,1}(i,7) = 1;
+                elseif Trials{1,1}(i,3)==2 & Trials{2,1}(i,8)~='P'
+                    Trials{1,1}(i,7) = 1;                                
+                else
+                    Trials{1,1}(i,7) = 0;
+                end;
+
+            otherwise
+                Trials{1,1}(i,7) = 999;
+       end
+end
+
+clear i
 
 % --------------------------%
 %       SAVING DATA         %
 % --------------------------%
 
 % Saving the data
-save (SavedMat, 'Trials', 'BlockLength', 'NbTrials', 'SubjID', 'Session', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'NoiseRange');
+save (SavedMat);
 

@@ -159,6 +159,7 @@ axis([0 40+length(NoiseSoundRange) 0 3])
 
 
 for i=1:NbTrials
+    
 
 	if TotalTrials{1,1}(i,5)~=666 & TotalTrials{1,1}(i,4)>.5
 

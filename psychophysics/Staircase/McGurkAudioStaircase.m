@@ -97,9 +97,9 @@ ConDir = 'CongMovies';
 InconDir = 'IncongMovies';
 
 % Shorten Movie at the beginning by
-MovieBegin = 0.04*7; % in secs
+MovieBegin = 0.04*8; % in secs
 
-MovieLength = 40; % in frames
+MovieLength = 38; % in frames
 
 % Parameters to cut the movies
 height = 576; 
@@ -116,7 +116,7 @@ HorizonOffset = 18;
 % Sound
 SamplingFreq = 44100;
 NbChannels = 2;
-NoiseSoundRange = linspace (0,0.55,14); % Adds some whitenoise to the sound track : 0 -> no noise; 1 -> noise level equivqlent to the max intensity present in the orginal soundtrack
+NoiseSoundRange = linspace (0,0.4,14); % Adds some whitenoise to the sound track : 0 -> no noise; 1 -> noise level equivqlent to the max intensity present in the orginal soundtrack
 LatBias = 0;
 
 if MovieBegin~=0
@@ -169,9 +169,9 @@ ResponseTimeWindow = 0.6;
 StimType2Test = input('Which category to test : 1 = CON ; 2 = INC ; 3 = McGurk ? ');
 
 if StimType2Test==3
-    NbTrialsPerCondition=4;
+    NbTrialsPerCondition=6;
 else
-    NbTrialsPerCondition=3;
+    NbTrialsPerCondition=4;
 end
 
 [Trials] = TrialsRandom (NoiseSoundRange, StimType2Test, NbTrialsPerCondition, McDir, ConDir, InconDir, MovieType, SoundType)
@@ -349,6 +349,18 @@ ListenChar(2);
 
 for j=1:NbTrials
     
+    
+    if mod(j,(round(NbTrials/2)+1))==0
+		DrawFormattedText(win, 'Press the space bar to continue.', 'center', 'center', 255);
+        Screen('Flip', win);
+        
+        while strcmp(KbName(keyCode),RespOTHER)==0
+        [secs, keyCode, deltaSecs] = KbWait(ResponseBox);
+        KbName(keyCode)
+        end
+        
+	end;
+    
     % tic
 
 	% Check for experiment abortion from operator
@@ -499,6 +511,7 @@ clear Screen;
 ListenChar
 
 catch
+save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange'); 
 KbQueueRelease(ResponseBox);
 PsychPortAudio('Close');
 ShowCursor;
