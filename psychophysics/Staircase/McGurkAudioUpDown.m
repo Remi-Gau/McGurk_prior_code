@@ -61,7 +61,7 @@ end;
 DataDir = strcat(pwd, filesep, 'Subjects_Data');
 
 % Basename for all file names
-SavedMat = strcat(DataDir, filesep, 'Subject_', SubjID, '_AudioStaircase_Run_', num2str(Run), '.mat');
+SavedMat = strcat(DataDir, filesep, 'Subject_', SubjID, '_AudioStaircaseUpDownw_Run_', num2str(Run), '.mat');
 
 
 % Before overwriting files
@@ -89,21 +89,14 @@ MovieType = '.mov';
 SoundType = '.wav';
 
 McDir = 'McGurkMovies';
-ConDir = 'CongMovies';
-InconDir = 'IncongMovies';
 
 % Shorten Movie at the beginning by
 MovieBegin = 0.04*8; % in secs
-
 MovieLength = 38; % in frames
 
 % Parameters to cut the movies
 height = 576; 
 width = 720;
-
-% Parameters to extract the mouth
-MovieOrigin = [290  350];
-MovieDim2Extract = [160 110];
 
 % Horizontal Offset
 HorizonOffset = 18;
@@ -113,18 +106,9 @@ HorizonOffset = 18;
 SamplingFreq = 44100;
 NbChannels = 2;
 LatBias = 0;
+MaxNoise2SignalRatio = 1 ;
 
-NbLevels = 15;
-% Adds some whitenoise to the sound track : 0 -> no noise; 1 -> noise level
-% equivqlent to the max intensity present in the orginal soundtrack
-NoiseSoundRange = [ linspace(0, 0.4, NbLevels); ...
-                    linspace(0, 0.4, NbLevels); ...
-                    linspace(0, 0.4, NbLevels); ...
-                    linspace(0, 0.4, NbLevels); ...
-                    linspace(0, 0.4, NbLevels); ...
-                    linspace(0, 0.5, NbLevels); ...
-                    linspace(0, 0.5, NbLevels); ...
-                    linspace(0, 0.5, NbLevels)];
+IncrementList=linspace(0.2,0.005,15)
 
 if MovieBegin~=0
     SoundBegin = MovieBegin;
@@ -165,34 +149,10 @@ if MacKeyboard==ResponseBox & ismac==1
     RespT = 'LeftArrow';
 end 
 
-ResponseTimeWindow = 1 ;
+ResponseTimeWindow = 1.5 ;
 
 
 % -------------------------------------------------------------------------
-
-StimType2Test = input('Which category to test : 1 = CON ; 2 = INC ; 3 = McGurk ? ');
-
-if StimType2Test==3
-    NbTrialsPerCondition=4;
-else
-    NbTrialsPerCondition=4;
-end
-
-[Trials] = TrialsRandom (NoiseSoundRange, StimType2Test, NbTrialsPerCondition, McDir, ConDir, InconDir, MovieType, SoundType)
-
-% Returns a {4,1} cell
-% {1,1} contains the trial number and the type of stimuli presented on this trial
-% Trials(i,1) = [i NoiseLevelIndex];
-% i		 is the trial number
-
-% {2,1} contains the name of the stim used
-% {3,1} contains the absolute path of the corresponding movie to be played
-% {4,1} contains the absolute path of the corresponding sound to be played
-
-
-NbTrials=length(Trials{1,1}(:,1))
-
-fprintf('\nThis run should last %.0f min.\n\n', ceil( (1.5+ResponseTimeWindow) * NbTrials / 60) );
 
 fprintf('Do you want to continue?\n')
 Confirm=input('Type ok to continue. ', 's');
@@ -201,11 +161,24 @@ if ~strcmp(Confirm,'ok') % Abort experiment if too long
         return
 end
 
-if Verbosity==1
-    NbTrials=5
+% -------------------------------------------------------------------------
+
+% List the McGurk movies and their absolute pathnames with the same method
+% as above
+McMoviesDir = strcat(pwd, filesep, McDir, filesep);
+McMoviesDirList = dir(strcat(McMoviesDir, '*', MovieType));
+if (isempty(McMoviesDirList))
+    error('There are no McGurk movie.');
+end;
+NbMcMovies = size(McMoviesDirList, 1);
+
+
+% Initialise some variables or mat or cells
+for i=1:NbMcMovies
+    Trials(i).name = McMoviesDirList(i).name;
+    Trials(i).results = [];
 end
 
-% -------------------------------------------------------------------------
 
 
 try
@@ -346,36 +319,38 @@ tic
 %       TRIALS LOOPS        %
 % --------------------------%
 
+ContinueXP = ones(1,NbMcMovies);
+TrialCounter = zeros(1,NbMcMovies);
+Change = ones(1,NbMcMovies);
+NoiseSoundLevel = repmat((MaxNoise2SignalRatio-0)/2,1,NbMcMovies);
+
 ListenChar(2);
 
-for j=1:NbTrials
-    
-    
-    if mod(j,(round(NbTrials/2)+1))==0
-		DrawFormattedText(win, 'Press the space bar to continue.', 'center', 'center', 255);
-        Screen('Flip', win);
-        
-        while strcmp(KbName(keyCode),RespOTHER)==0
-        [secs, keyCode, deltaSecs] = KbWait(ResponseBox);
-        KbName(keyCode)
-        end
-        
-	end;
+while any(ContinueXP)
 
 	% Check for experiment abortion from operator
     [keyIsDown,secs,keyCode] = KbCheck(MacKeyboard);
 	if (keyIsDown==1 && keyCode(Esc))
 		break;
 	end;
+    
+    % Choose a movie
+    Choice = ceil(rand*NbMcMovies);
+    while ~ContinueXP(Choice)
+        Choice = ceil(rand*NbMcMovies);
+    end
+        
+    
+    TrialCounter(Choice) = TrialCounter(Choice) + 1;
 		
 	% Reinitialises the pressed variables
 	pressed = 0 ; RT = []; Resp = [];
-	
-	% Gets the stimuli name from the Trial cell given by the TrialsRandom function
-	MovieName = [deblank(Trials{3,1}(j,:))];
-	SoundName = [deblank(Trials{4,1}(j,:))];
-    NoiseSoundLevel = Trials{1,1}(j,3);
 
+    
+    Stim = McMoviesDirList(Choice).name;
+    MovieName = [McMoviesDir Stim];
+    SoundName = strcat(MovieName(1:end-4), SoundType); % Notes the name of the sound file corresponding to the movie
+    
     
   	% SOUND    
 	% Read the wav file and adds some noise
@@ -386,7 +361,7 @@ for j=1:NbTrials
     
     
 	
-   	A = NoiseSoundLevel * ( 2 * max(max(Z)) * rand(1, length(Z)) - max(max(Z)) );
+   	A = NoiseSoundLevel(Choice) * ( 2 * max(max(Z)) * rand(1, length(Z)) - max(max(Z)) );
    	A = [A ; A];
    	Z = A + Z;
     clear A;
@@ -471,7 +446,38 @@ for j=1:NbTrials
 	else
 		RT = 666;
 		Resp = 666 ;
-	end
+    end
+    
+    % --------------------------%
+    %     Sorting   Answers     %
+    % --------------------------%
+    switch Trials(Choice).name(8)
+        case 'B'
+            switch KbName( Resp ) % Check responses given
+                case RespB
+                RespCode = 1; % McGurk did not work
+                
+                case RespD
+                RespCode = 2; % McGurk worked
+                
+                otherwise
+                RespCode = 3;
+                
+            end
+
+        case 'P'
+            switch KbName( Resp ) % Check responses given
+                case RespP
+                RespCode = 1;
+                
+                case RespT
+                RespCode = 2;
+                
+                otherwise
+                RespCode = 3;
+                
+            end
+    end
     
     
    	% Close the movie but before we note the number of frame dropped during
@@ -482,11 +488,40 @@ for j=1:NbTrials
    	% Stop sound, collect onset timestamp of sound
    	T_AudioOnset = PsychPortAudio('Stop', SoundHandle, 1); 		 	
     	 
-	% APPENDS RESULTS to the Trials{1,1} matrix and to Trials{2,1}
-	Trials{1,1}(j, 4:5) = [RT Resp];
+	% APPENDS RESULTS to the Trials{1,1} matrix and to Trials{2,1}    
+    Trials(Choice).results = [Trials(Choice).results ; sum(TrialCounter) TrialCounter(Choice) NoiseSoundLevel(Choice) RT Resp RespCode]; % Notes the trial number and the Noiselevel used for this trial
+    
+    if TrialCounter(Choice)>1
+        TEMP = find(Trials(Choice).results(:,6)~=3);
+        TEMP = TEMP(end-1:end);
+        if Trials(Choice).results(TEMP(1),6)~=Trials(Choice).results(TEMP(2),6)
+            Change(Choice)=Change(Choice)+1;
+        end
+    end
+    
+    if Change(Choice)<=length(IncrementList)
+        switch RespCode
+                case 1
+                    NoiseSoundLevel(Choice) = NoiseSoundLevel(Choice)+IncrementList(Change(Choice));
+                case 2
+                    NoiseSoundLevel(Choice) = NoiseSoundLevel(Choice)-IncrementList(Change(Choice));
+                case 3
+                    NoiseSoundLevel(Choice) = NoiseSoundLevel(Choice);
+        end
+    else
+        ContinueXP(Choice)=0;
+    end
+    
+    if NoiseSoundLevel(Choice)>MaxNoise2SignalRatio || NoiseSoundLevel(Choice)<0
+        ContinueXP(Choice)=0;
+    end
+    
+    if sum(TrialCounter)>60*NbMcMovies
+        ContinueXP(Choice)=0;
+    end
   
-    if mod(j,NbTrials/10)==0
-            save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange'); 
+    if mod(sum(TrialCounter),15)==0
+            save (SavedMat); 
     end
     
 end
@@ -503,7 +538,7 @@ clear Screen;
 ListenChar
 
 catch
-save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange'); 
+save (SavedMat); 
 KbQueueRelease(ResponseBox);
 PsychPortAudio('Close');
 ShowCursor;
@@ -515,81 +550,10 @@ end;
 
 toc
 
-% Saving the data
-save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange');
-
-
-% --------------------------%
-%     Sorting   Answers     %
-% --------------------------%
-for i=1:NbTrials
-	switch Trials{1,1}(i,2)
-		case 2 % if a McGurk Trial
-			switch Trials{2,1}(i,8)
-				case 'B'
-					switch KbName( Trials{1,1}(i,5) ) % Check responses given
-						case RespB
-						Trials{1,1}(i,6) = 2; % McGurk did not work
-						case RespD
-						Trials{1,1}(i,6) = 3; % McGurk worked
-						otherwise
-						Trials{1,1}(i,6) = 4;
-					end
-
-				case 'P'
-					switch KbName( Trials{1,1}(i,5) ) % Check responses given
-						case RespP
-						Trials{1,1}(i,6) = 2;
-						case RespT
-						Trials{1,1}(i,6) = 3;
-						otherwise
-						Trials{1,1}(i,6) = 4;
-					end
-			end
-		
-		otherwise
-			switch Trials{2,1}(i,8)
-				case 'B'
-					if Trials{1,1}(i,5) == KbName(RespB) % Check responses given
-						Trials{1,1}(i,6) = 2;
-					else
-						Trials{1,1}(i,6) = 3;
-					end
-
-				case 'D'
-					if Trials{1,1}(i,5) == KbName(RespD) % Check responses given
-						Trials{1,1}(i,6) = 2;
-					else
-						Trials{1,1}(i,6) = 3;
-					end
-				case 'G'
-					if Trials{1,1}(i,5) == KbName(RespG) % Check responses given
-						Trials{1,1}(i,6) = 2;
-					else
-						Trials{1,1}(i,6) = 3;
-					end
-				case 'K'
-					if Trials{1,1}(i,5) == KbName(RespK) % Check responses given
-						Trials{1,1}(i,6) = 2;
-					else
-						Trials{1,1}(i,6) = 3;
-					end	
-				case 'P'
-					if Trials{1,1}(i,5) == KbName(RespP) % Check responses given
-						Trials{1,1}(i,6) = 2;
-					else
-						Trials{1,1}(i,6) = 3;
-					end
-				case 'T'
-					if Trials{1,1}(i,5) == KbName(RespT) % Check responses given
-						Trials{1,1}(i,6) = 2;
-					else
-						Trials{1,1}(i,6) = 3;
-					end
-			end
-			
-
-	end
+for i=1:NbMcMovies
+    figure(i)
+    plot(Trials(i).results(:,3))
+    Trials(i).results
 end
 
 
@@ -598,4 +562,4 @@ end
 % --------------------------%
 
 % Saving the data
-save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange');
+save (SavedMat)

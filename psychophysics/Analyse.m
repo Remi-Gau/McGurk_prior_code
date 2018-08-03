@@ -8,9 +8,9 @@ function Analyse
 % Trials(i,1:5) = [i p Choice n m RT Resp RespCat];
 % i		 is the trial number
 % p		 is the trial number in the current block
+% TrialOnset
+% BlockType
 % Choice	 contains the type of stimuli presented on this trial : 0--> Congruent, 1--> Incongruent, 2--> Counterphase.
-% n 		 is the variable that says what kind of block came before the present one. Equals to 666 if there was no previous block. : 0--> Congruent, 1--> Incongruent, 2--> Counterphase.
-% m 		 is the variable that says the length of the block that came before the present one. Equals to 666 if there was no previous block.
 % RT
 % Resp
 % RespCat	 For Congruent trials : 1 --> Hit; 0 --> Miss // For Incongruent trials : 1 --> Hit; 0 --> Miss // For McGurk trials : 0 --> McGurk effect worked; 0 --> Miss
@@ -21,9 +21,6 @@ function Analyse
 % {4,1} contains the absolute path of the corresponding movie to be played
 % {5,1} contains the absolute path of the corresponding sound to be played
 
-
-% TO DO :
-%	- add a way to analyze just one trial
 
 clc
 clear all
@@ -41,17 +38,17 @@ cd Subjects_Data
 
 try
 
-List = dir ('Subject*.mat');
-% List = dir ('*.mat');
-
-SizeList = size(List,1);
+ResultsFilesList = dir ('Subject*.mat');
+SizeList = size(ResultsFilesList,1);
+NbRunsDone = SizeList;
 
 % Compile all the trials of all the runs
 TotalTrials = cell(2,1);
-for i=1:SizeList
-	load(List(i).name);
+for RunNb=1:SizeList
+	load(ResultsFilesList(RunNb).name);
 	TotalTrials{1,1} = [TotalTrials{1,1} ; Trials{1,1}];
 	TotalTrials{2,1} = [TotalTrials{2,1} ; Trials{2,1}];
+    NoiseRangeCompil(:,:,RunNb) = NoiseRange;
 end;
 
 NbTrials = length(TotalTrials{1,1}(:,1));
@@ -66,54 +63,66 @@ end
 figure(n)
 n = n+1;
 
-scatter(15*TotalTrials{1,1}(:,4)+TotalTrials{1,1}(:,2) , TotalTrials{1,1}(:,5))
+scatter(15*TotalTrials{1,1}(:,5)+TotalTrials{1,1}(:,2) , TotalTrials{1,1}(:,6))
 xlabel 'Trial Number'
 ylabel 'Response Time'
 set(gca,'tickdir', 'out', 'xtick', [1 16 31] ,'xticklabel', 'Congruent|Incongruent|McGurk', 'ticklength', [0.002 0], 'fontsize', 13)
 axis 'tight'
-set(gca,'ylim', [0 3])
+set(gca,'ylim', [-.5 10])
 
 
 %------------------------------------------------------------------------------------------------------------------
 
 
 StimByStimRespRecap = cell(1,2,3);
+McGurkStimByStimRespRecap = cell(NbMcMovies,2);
 
 for i=1:NbMcMovies
 	StimByStimRespRecap{1,1,3}(i,:) = McMoviesDirList(i).name(1:end-4);
-	StimByStimRespRecap{1,2,3} = zeros(i,7,BlockLength,NbBlockType);
+	StimByStimRespRecap{1,2,3} = zeros(i,7,NbTrialsPerBlock,NbBlockType);
+    
+    McGurkStimByStimRespRecap{i,2} = zeros(NbBlockType,2);
+    McGurkStimByStimRespRecap{i,1} = McMoviesDirList(i).name(1:end-4);
 end
 
 for i=1:NbIncongMovies
 	StimByStimRespRecap{1,1,1}(i,:) = CongMoviesDirList(i).name(1:end-4); % Which stimuli
-	StimByStimRespRecap{1,2,1} = zeros(i,7,BlockLength,NbBlockType); % What answers
+	StimByStimRespRecap{1,2,1} = zeros(i,7,NbTrialsPerBlock,NbBlockType); % What answers
+    
+    CONStimByStimRespRecap{i,2} = zeros(2,1);
+    CONStimByStimRespRecap{i,1} = CongMoviesDirList(i).name(1:end-4);
 
 	StimByStimRespRecap{1,1,2}(i,:) = IncongMoviesDirList(i).name(1:end-4);
-	StimByStimRespRecap{1,2,2} = zeros(i,7,BlockLength,NbBlockType);
+	StimByStimRespRecap{1,2,2} = zeros(i,7,NbTrialsPerBlock,NbBlockType);
+    
+    INCStimByStimRespRecap{i,2} = zeros(2,1);
+    INCStimByStimRespRecap{i,1} = IncongMoviesDirList(i).name(1:end-4);
 end
 
 
-ReactionTimesCell = cell(3, BlockLength, 2, NbBlockType);
+ReactionTimesCell = cell(3, 2, NbBlockType);
 
 
 ResponsesCell = cell(3, NbBlockType);
 for i=1:NbBlockType*3
-	ResponsesCell{i}=zeros(2,BlockLength);
+	ResponsesCell{i}=zeros(2,NbTrialsPerBlock);
 end
 
 
-PriorResponse=zeros(2,16,2);
+% PriorResponse=zeros(2,8,2);
+% 
+% TimeSinceLastCell=cell(2,2);
 
 
 for i=1:NbTrials
     
-	if TotalTrials{1,1}(i,5)>0.5 & TotalTrials{1,1}(i,5)<2 % Skips trials where answer came after responses window or with impossible RT (negative or before the beginning of the movie)
+	if TotalTrials{1,1}(i,6)>0.5 % & TotalTrials{1,1}(i,6)<2.9      % Skips trials where answer came after responses window or with impossible RT (negative or before the beginning of the movie)
 		
-		Context = TotalTrials{1,1}(i,3); % What block we are in
+		Context = TotalTrials{1,1}(i,4); % What block we are in
 				
-		TrialType = TotalTrials{1,1}(i,4); % What type of trial this is
+		TrialType = TotalTrials{1,1}(i,5); % What type of trial this is
 				
-		if TotalTrials{1,1}(i,7)==1
+		if TotalTrials{1,1}(i,8)==1
 			switch TrialType
 				case 0
 					RightResp = 1;
@@ -122,7 +131,7 @@ for i=1:NbTrials
 				case 2
 					RightResp = 2;
 			end
-		else 
+        elseif TotalTrials{1,1}(i,8)==0
 			switch TrialType
 				case 0
 					RightResp = 2;
@@ -130,57 +139,69 @@ for i=1:NbTrials
 					RightResp = 2;
 				case 2
 					RightResp = 1;
-			end	
-        end
-		
-        
-		
-		if TrialType==2	
-			
-            From = TotalTrials{1,1}(i-1,4);
-            GoingBack = 1;
-            
-            while TotalTrials{1,1}(i-GoingBack,4)==From
-                GoingBack=GoingBack+1;
-                
-                if GoingBack==i
-                    break
-                end
-                
             end
-					
-			PriorResponse(RightResp,GoingBack-1,Context+1)=PriorResponse(RightResp,GoingBack-1,Context+1)+1;
-			
+        else
+           RightResp = 2;
 		end
 		
 		
-			
-			
+% 		if TrialType==2	
+% 
+% 			From = TotalTrials{1,1}(i-1,5);
+% 			GoingBack = 1;
+% 
+% 			while TotalTrials{1,1}(i-GoingBack,5)==From
+% 				GoingBack=GoingBack+1;
+% 				if GoingBack==i || GoingBack>11
+% 				    break
+% 				end
+% 			end
+% 
+% 			PriorResponse(RightResp,GoingBack-1,Context+1)=PriorResponse(RightResp,GoingBack-1,Context+1)+1;
+% 			
+% 			
+% 			TimeSinceLast = TotalTrials{1,1}(i,3)-TotalTrials{1,1}(i-1,3);
+% 			
+% 			if From==2
+% 				From=TotalTrials{1,1}(i-2,5);
+% 				TimeSinceLast = TotalTrials{1,1}(i,3)-TotalTrials{1,1}(i-2,3);
+% 			end
+% 			
+% 			TimeSinceLastCell{From+1,RightResp}= [TimeSinceLastCell{From+1,RightResp} TimeSinceLast];
+% 
+% 		end
 		
-		RT = TotalTrials{1,1}(i,5);
-				
-		switch KbName( TotalTrials{1,1}(i,6) ) % Check responses given
-			case RespB
-			Resp = 1;
+		
+		
+		RT = TotalTrials{1,1}(i,6);
 
-			case RespD
-			Resp = 2;
+        if ismac 	
+            switch KbName( TotalTrials{1,1}(i,7) ) % Check responses given
+                case RespB
+                Resp = 1;
 
-			case RespG
-			Resp = 3;
-			
-			case RespK
-			Resp = 4;
-			
-			case RespP
-			Resp = 5;
+                case RespD
+                Resp = 2;
 
-			case RespT
-			Resp = 6;	
+                case RespG
+                Resp = 3;
 
-			otherwise
-			Resp = 7;
-		end
+                case RespK
+                Resp = 4;
+
+                case RespP
+                Resp = 5;
+
+                case RespT
+                Resp = 6;	
+
+                otherwise
+                Resp = 7;
+            end
+        else
+            Resp = 7;  
+        end
+            
 		
 		switch TrialType
 			case 0
@@ -192,61 +213,88 @@ for i=1:NbTrials
 		end
 		
 	
-		if TotalTrials{1,1}(i,7)~=999
+		if TotalTrials{1,1}(i,8)~=999
 			ResponsesCell{TrialType+1,Context+1}(RightResp, TotalTrials{1,1}(i,2)) = ResponsesCell{TrialType+1,Context+1}(RightResp, TotalTrials{1,1}(i,2)) + 1;
 		end
 			
 		StimByStimRespRecap{1,2,TrialType+1}(WhichStim,Resp,TotalTrials{1,1}(i,2),Context+1) = StimByStimRespRecap{1,2,TrialType+1}(WhichStim,Resp,TotalTrials{1,1}(i,2),Context+1) + 1;
 		
-		if TotalTrials{1,1}(i,5)~=999
-			ReactionTimesCell{TrialType+1, TotalTrials{1,1}(i,2), RightResp, Context+1} = [ReactionTimesCell{TrialType+1, TotalTrials{1,1}(i,2), RightResp, Context+1} RT];
-		end
+		if TotalTrials{1,1}(i,8)~=999
+			ReactionTimesCell{TrialType+1,RightResp, Context+1} = [ReactionTimesCell{TrialType+1, RightResp, Context+1} RT];
+        end
+        
+        if TotalTrials{1,1}(i,8)~=999 
+            switch TrialType
+                case 2
+                    McGurkStimByStimRespRecap{WhichStim,2}(Context+1,RightResp) = McGurkStimByStimRespRecap{WhichStim,2}(Context+1,RightResp) + 1;
+                case 1
+                    INCStimByStimRespRecap{WhichStim,2}(RightResp) = INCStimByStimRespRecap{WhichStim,2}(RightResp) + 1;
+                case 0
+                    CONStimByStimRespRecap{WhichStim,2}(RightResp) = CONStimByStimRespRecap{WhichStim,2}(RightResp) + 1;
+                    
+            end
+        end
+            
+		
+		
 		
 	end
 end
 
 
-clear TrialType Context RT RightResp i WhichStim Resp
+clear TrialType Context RT RightResp i WhichStim Resp NoiseRange
 
+disp('%%%%%%%%%%%%')
+disp('% RESULSTS %')
+disp('%%%%%%%%%%%%')
+fprintf('\n\n\n')
 
+NoiseRangeCompil(3,1:4,:)
 
-Missed = length( [find(TotalTrials{1,1}(:,5)>2)' find(TotalTrials{1,1}(:,5)<0.5)'] ) / length (TotalTrials{1,1}(:,5))
+NbTrials
 
+NbValidTrials = NbTrials-length([find(TotalTrials{1,1}(:,7)==999)'])
 
+fprintf('\n\n')
+disp('RESPONSES')
 
-MedianReactionTimes = cell(3, BlockLength, 2, NbBlockType);
+Missed = length( [find(TotalTrials{1,1}(:,7)==999)'] ) / length (TotalTrials{1,1}(:,6))
 
-for i=1:3*BlockLength*2*NbBlockType
-	MedianReactionTimes{i} = median(ReactionTimesCell{i});
-end
+fprintf('\n\n')
+fprintf('Mc Gurk \n\n')
 
-
-
+NbMcGURKinCON = sum(sum(ResponsesCell{3,1}(1:2,:)))
+NbMcGURKinINC = sum(sum(ResponsesCell{3,2}(1:2,:)))
 
 McGURKinCON_Correct = sum(ResponsesCell{3,1}(1,:))/sum(sum(ResponsesCell{3,1}(1:2,:)))
-disp(ResponsesCell{3,1}(1,:)./sum(ResponsesCell{3,1}(1:2,:)))
-
 McGURKinINC_Correct = sum(ResponsesCell{3,2}(1,:))/sum(sum(ResponsesCell{3,2}(1:2,:)))
-disp(ResponsesCell{3,2}(1,:)./sum(ResponsesCell{3,2}(1:2,:)))
 
+for i=1:NbMcMovies
+    disp(McGurkStimByStimRespRecap{i,1})
+    disp(McGurkStimByStimRespRecap{i,2}(:,1)./sum(McGurkStimByStimRespRecap{i,2},2))
+end
 
+fprintf('\n\n')
+fprintf('INCONGRUENT \n\n')
 
+NbINC = sum(sum(ResponsesCell{2,2}(1:2,:)))
 INCinINC_Correct = sum(ResponsesCell{2,2}(1,:))/sum(sum(ResponsesCell{2,2}(1:2,:)))
-disp(ResponsesCell{2,2}(1,:)./sum(ResponsesCell{2,2}(1:2,:)))
 
-INCinCON_Correct = sum(ResponsesCell{2,1}(1,:))/sum(sum(ResponsesCell{2,1}(1:2,:)))
-disp(ResponsesCell{2,1}(1,:)./sum(ResponsesCell{2,1}(1:2,:)))
+for i=1:NbIncongMovies
+    disp(INCStimByStimRespRecap{i,1})
+    disp(INCStimByStimRespRecap{i,2}(1)/sum(INCStimByStimRespRecap{i,2}))
+end
 
+fprintf('\n\n')
+fprintf('CONGRUENT \n\n')
 
-
+NbCON = sum(sum(ResponsesCell{1,1}(1:2,:)))
 CONinCON_Correct = sum(ResponsesCell{1,1}(1,:))/sum(sum(ResponsesCell{1,1}(1:2,:)))
-disp(ResponsesCell{1,1}(1,:)./sum(ResponsesCell{1,1}(1:2,:)))
 
-CONinINC_Correct = sum(ResponsesCell{1,2}(1,:))/sum(sum(ResponsesCell{1,2}(1:2,:)))
-disp(ResponsesCell{1,2}(1,:)./sum(ResponsesCell{1,2}(1:2,:)))
-
-
-PriorResponse
+for i=1:NbIncongMovies
+    disp(CONStimByStimRespRecap{i,1})
+    disp(CONStimByStimRespRecap{i,2}(1)/sum(CONStimByStimRespRecap{i,2}))
+end
 
 
 %--------------------------------------------- FIGURE --------------------------------------------------------
@@ -278,128 +326,79 @@ plot([ResponsesCell{3,2}(1,:)./sum(ResponsesCell{3,2}(1:2,:))], 'r')
 t=title ('McGurk');
 set(t,'fontsize',15);
 axis('tight')
-set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13, 'ylim', [0 1]);
+set(gca,'tickdir', 'out', 'xtick', 1:max(NbTrialsPerBlock) ,'xticklabel', 1:max(NbTrialsPerBlock), 'ticklength', [0.005 0], 'fontsize', 13, 'ylim', [0 1]);
 legend(['In a CON Block';'In a INC Block'], 'Location', 'SouthEast')
 
 
+% figure(n)
+% n=n+1;
+% subplot(211)
+% hist(TimeSinceLastCell{1,1})
+% subplot(212)
+% hist(TimeSinceLastCell{1,2})
+% 
+% figure(n)
+% n=n+1;
+% subplot(211)
+% hist(TimeSinceLastCell{2,1})
+% subplot(212)
+% hist(TimeSinceLastCell{2,2})
 
-figure(n)
-n=n+1;
+fprintf('\n\n')
+disp('REACTION TIMES')
 
-% Plots histograms for % correct for all the CON trials
-subplot(211)
-bar([ResponsesCell{1,1}(1,:)./sum(ResponsesCell{1,1}(1:2,:)) ], 0.7)
-t=title ('Congruent');
-ylabel 'In a CON Block';
-set(t,'fontsize',15);
-axis('tight')
-set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13, 'ylim', [0 1]);
+fprintf('\n\n')
+ReactionTimesCell
 
-subplot(212)
-bar([ResponsesCell{1,2}(1,:)./sum(ResponsesCell{1,2}(1:2,:)) ], 0.7)
-ylabel 'In a INC Block';
-set(t,'fontsize',15);
-axis('tight')
-set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13, 'ylim', [0 1]);
+% ReactionTimesCell{TrialType+1,RightResp, Context+1}
 
+fprintf('\n\n')
+fprintf('CONGRUENT \n\n')
+RT_CON_OK = nanmedian(ReactionTimesCell{1,1,1})
+RT_CON_NO = nanmedian(ReactionTimesCell{1,2,1})
 
+fprintf('\n\n')
+fprintf('INCONGRUENT \n\n')
+RT_INC_OK = nanmedian(ReactionTimesCell{2,1,2})
+RT_INC_NO = nanmedian(ReactionTimesCell{2,2,2})
 
-figure(n)
-n=n+1;
+fprintf('\n\n')
+fprintf('Mc Gurk \n\n')
+RT_McGURK_OK_inCON_TOTAL = nanmedian(ReactionTimesCell{3,1,1})
+RT_McGURK_OK_inINC_TOTAL = nanmedian(ReactionTimesCell{3,1,2})
 
-% Plots histograms for % correct for all the INC trials
-subplot(211)
-bar([ResponsesCell{2,2}(1,:)./sum(ResponsesCell{2,2}(1:2,:)) ], 0.7)
-t=title ('Incongruent');
-ylabel 'In a INC Block';
-set(t,'fontsize',15);
-axis('tight')
-set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13, 'ylim', [0 1]);
-
-subplot(212)
-bar([ResponsesCell{2,1}(1,:)./sum(ResponsesCell{2,1}(1:2,:)) ], 0.7)
-ylabel 'In a CON Block';
-set(t,'fontsize',15);
-axis('tight')
-set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13, 'ylim', [0 1]);
-
-
-
-
-MedianReactionTimes = cell2mat(MedianReactionTimes);
-
-for i=1:max(BlockLength)
-	RT_McGURK_OK_inCON(i) = MedianReactionTimes(3,i,1,1);
-	RT_McGURK_OK_inINC(i) = MedianReactionTimes(3,i,1,2);
-
-	RT_McGURK_NO_inCON(i) = MedianReactionTimes(3,i,2,1);
-	RT_McGURK_NO_inINC(i) = MedianReactionTimes(3,i,2,2);
-	
-	RT_CONinCON(i) = MedianReactionTimes(1,i,1,1);
-	RT_CONinINC(i) = MedianReactionTimes(1,i,1,2);
-	
-	RT_INCinINC(i) = MedianReactionTimes(2,i,1,2);
-	RT_INCinCON(i) = MedianReactionTimes(2,i,1,1);
-
-end
-
-
+RT_McGURK_NO_inCON_TOTAL = nanmedian(ReactionTimesCell{3,2,1})
+RT_McGURK_NO_inINC_TOTAL = nanmedian(ReactionTimesCell{3,2,2})
 
 %--------------------------------------------- FIGURE --------------------------------------------------------
 figure(n)
-n=n+1;
+n = n+1;
 
-subplot (121)
-% Plot median of RT of INC
-plot(1:BlockLength, RT_INCinINC, 'r', 1:BlockLength, RT_INCinCON, 'g')
-t=title ('RT Incongruent');
-set(t,'fontsize',15);
-set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13);
-legend(['In a INC Block';'In a CON Block'], 'Location', 'NorthEast')
-axis([1 max(BlockLength) .4 2])
+t=title('Reactions times');
 
-subplot (122)
-% Plot median of RT of CON
-plot(1:BlockLength, RT_CONinCON, 'r', 1:BlockLength, RT_CONinINC, 'g')
-t=title ('RT Congruent');
-set(t,'fontsize',15);
-set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13);
-legend(['In a CON Block';'In a INC Block'], 'Location', 'NorthEast')
-axis([1 max(BlockLength) .4 2])
+subplot(3,1,1)
+hist(ReactionTimesCell{1,1,1},20)
+axis([0.5 3 0 max(hist(ReactionTimesCell{1,1,1},20))])
+ylabel 'CONGRUENT';
+subplot(3,1,2)
+hist(ReactionTimesCell{2,1,2},20)
+axis([0.5 3 0 max(hist(ReactionTimesCell{1,1,1},20))])
+ylabel 'INCONGRUENT';
+subplot(3,1,3)
+hist([ReactionTimesCell{3,1,1} ReactionTimesCell{3,1,2} ReactionTimesCell{3,2,1} ReactionTimesCell{3,2,2}],20)
+axis([0.5 3 0 max(hist(ReactionTimesCell{1,1,1},20))])
+ylabel 'McGurk';
+ 
 
-
-
-figure(n)
-n=n+1;
-
-% Plot median of RT of McGurk
-subplot (121)
-plot(1:BlockLength, RT_McGURK_OK_inCON, 'r', 1:BlockLength, RT_McGURK_OK_inINC, 'g')
-t=title ('RT McGurk answers');
-set(t,'fontsize',15);
-set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13);
-legend(['In a CON Block';'In a INC Block'], 'Location', 'NorthEast')
-axis([1 max(BlockLength) .4 2])
-
-subplot (122)
-plot(1:BlockLength, RT_McGURK_NO_inCON, 'r', 1:BlockLength, RT_McGURK_NO_inINC, 'g')
-t=title ('RT non McGurk answers');
-set(t,'fontsize',15);
-set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13);
-legend(['In a CON Block';'In a INC Block'], 'Location', 'NorthEast')
-axis([1 max(BlockLength) .4 2])
-
-
-% StimByStimRespRecap{1,2,TrialType+1}(WhichStim,Resp,TotalTrials{1,1}(i,2),Context+1)
-
+%--------------------------------------------- FIGURE --------------------------------------------------------
 figure(n)
 n = n+1;
 
 for j=1:NbMcMovies
 
-    subplot (2,2,j)
+    subplot (2,4,j)
 
-    for i=1:max(BlockLength)
+    for i=1:max(NbTrialsPerBlock)
         Temp = StimByStimRespRecap{1,2,3}(j,:,i,1);
         G (i,:) = Temp/sum(Temp);
     end
@@ -408,16 +407,16 @@ for j=1:NbMcMovies
     
     t=title (StimByStimRespRecap{1,1,3}(j,:));
     set(t,'fontsize',15);
-    set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13)
+    set(gca,'tickdir', 'out', 'xtick', 1:max(NbTrialsPerBlock) ,'xticklabel', 1:max(NbTrialsPerBlock), 'ticklength', [0.005 0], 'fontsize', 13)
     axis 'tight'
 
 end
 
 for j=1:NbMcMovies
 
-    subplot (2,2,j+NbMcMovies)
+    subplot (2,4,j+NbMcMovies)
 
-    for i=1:max(BlockLength)
+    for i=1:max(NbTrialsPerBlock)
         Temp = StimByStimRespRecap{1,2,3}(j,:,i,2);
         G (i,:) = Temp/sum(Temp);
     end
@@ -425,17 +424,17 @@ for j=1:NbMcMovies
     bar(G, 'stacked')
     
     set(t,'fontsize',15);
-    set(gca,'tickdir', 'out', 'xtick', 1:max(BlockLength) ,'xticklabel', 1:max(BlockLength), 'ticklength', [0.005 0], 'fontsize', 13)
+    set(gca,'tickdir', 'out', 'xtick', 1:max(NbTrialsPerBlock) ,'xticklabel', 1:max(NbTrialsPerBlock), 'ticklength', [0.005 0], 'fontsize', 13)
     axis 'tight'
 
 end
 
 legend(['b'; 'd'; 'g'; 'k'; 'p'; 't'; ' '])
 
-subplot (2,2,1)
+subplot (2,4,1)
 ylabel 'After CON';
 
-subplot (2,2,3)
+subplot (2,4,5)
 ylabel 'After INC';
 
 
@@ -453,15 +452,7 @@ if (IsOctave==0)
 	for i=1:(n-1)
 		figure(i)
 		print(gcf, strcat('Fig', num2str(i) ,'.eps'), '-depsc'); % Print figures in vector format
-	end
-
-	if (IsLinux==1)
-	        try
-		system('ps2pdf Figures.ps Figures.pdf;');
-        	catch
-	        fprintf('\nCould not convert ps in pdf.\n\n');
-        	end;
-	end;
+    end
     
 else
 	% Prints the results in a vector graphic file !!!
@@ -471,16 +462,6 @@ else
     		print(gcf, strcat('Fig', num2str(i) ,'.svg'), '-dsvg'); % Print figures in vector format
 	    	print(gcf, strcat('Fig', num2str(i) ,'.pdf'), '-dpdf'); % Print figures in pdf format
     	end;
-    	    	    
-    	if (IsLinux==1) % try to concatenate pdf
-        	try
-        	delete Figures.pdf; 
-        	system('pdftk Fig?.pdf cat output Figures.pdf');
-        	delete Fig?.pdf
-        	catch
-        	fprintf('\n We are on Linux. :-) But we could not concatenate the pdfs. Maybe check if the software pdftk is installed. \n\n');
-        	end;
-    	end;
 end;
 
 
@@ -489,205 +470,39 @@ clear G Color i n List Trials legend t Temp X Y
 SavedMat = strcat('Results_', SubjID, '.mat');
 
 % Saving the data
-if (IsOctave==0)
-    save (SavedMat);
-else
-    save ('-mat7-binary', SavedMat);
-end;
+save (SavedMat);
 
-
-
-
-SavedTxt = strcat('Results_', SubjID, '.csv');
-fid = fopen (SavedTxt, 'w');
-
-
-fprintf (fid, 'SUBJECT, %s\n\n', SubjID);
-
-fprintf (fid, 'Length of the different condition blocks\n');
-fprintf (fid, 'Congruent, %i\n', BlockLength(1,:)');
-fprintf (fid, 'Incongruent, %i\n', BlockLength(1,:)');
-fprintf (fid, 'McGurk, %i\n\n', BlockLength(1,:)');
-
-
-fprintf (fid, '\nNoise level for the different McGurk stimuli\n');
-for i=1:NbMcMovies
-	fprintf (fid, '%s, %6.2f\n', StimByStimRespRecap{1,1,3}(i,:), NoiseRange(3,i) );
-end
-
-fprintf (fid, '\nNoise level for the different incongruent stimuli\n');
-for i=1:NbIncongMovies
-	fprintf (fid, '%s, %6.2f\n', StimByStimRespRecap{1,1,2}(i,:), NoiseRange(2,i) );
-end
-
-fprintf (fid, '\nNoise level for the different congruent stimuli\n');
-for i=1:NbCongMovies
-	fprintf (fid, '%s, %6.2f\n', StimByStimRespRecap{1,1,1}(i,:), NoiseRange(1,i) );
-end
-
-
-fprintf (fid, '\nTotal number of trials, %i\n\n', sum(sum(cell2mat(ResponsesCell))) );
-
-
-
-fclose (fid);
 
 cd ..
-
-return
-
-
-
-ResponsesMat=cell2mat(ResponsesCell);
-
-fprintf (fid, '\nRESPONSES,Correct (Percent.),Total\n');
-fprintf (fid, 'Congruent, %6.4f, %i\n', sum(sum(ResponsesMat([1 3 5],1:BlockLength)))/sum(sum(ResponsesMat(:,1:BlockLength))), sum(sum(ResponsesMat(:,1:BlockLength))) );
-fprintf (fid, 'Incongruent, %6.4f, %i\n\n', sum(sum(ResponsesMat([1 3 5],BlockLength+1:2*BlockLength)))/sum(sum(ResponsesMat(:,BlockLength+1:2*BlockLength))), sum(sum(ResponsesMat(:,BlockLength+1:2*BlockLength))) );
-
-
-
-
-
-
-
-
-fprintf (fid,'Responses for INCONGRENT stimuli,b,d,g,k,p,t,Other\n');
-for i=1:NbINCMovies
-	fprintf (fid, '%s,' , StimByStimINCRespRecap{1,1}(i,:) ); fprintf (fid, '%6.2f,' , StimByStimINCRespRecap{1,2}(i,:) );
-	fprintf (fid, '\n');
-end
-
-
-fprintf (fid, '\nREACTION TIMES,Median,STD\n');
-fprintf (fid, 'Congruent,%6.3f,%6.3f\n', MeanAllCongruentRT, SDAllCongruentRT);
-fprintf (fid, 'Incongruent,%6.3f,%6.3f\n', MeanAllIncongruentRT, SDAllIncongruentRT);
-
-for i=1:max(BlockLength(1,:))
-	A(i)=length(RTBlockCON{1,i,1});
-end
-fprintf (fid, '\nCONGRUENT\n');
-fprintf (fid, 'After incongruent,'); fprintf (fid, '%i,', 1:max(AllCongruent(:,2)) );
-fprintf (fid, '\nMean,'); fprintf (fid, '%6.3f,', ResultsRTBlockCON(1,:,1) );
-fprintf (fid, '\nSTD,'); fprintf (fid, '%6.3f,', ResultsRTBlockCON(2,:,1) );
-fprintf (fid, '\nn,'); fprintf (fid, '%i,', A );
-
-
-for i=1:max(BlockLength(1,:))
-	A(i)=length(RTBlockCON{1,i,2});
-end		
-fprintf (fid, '\n\nAfter McGurk,'); fprintf (fid, '%i,', 1:max(AllCongruent(:,2)) );
-fprintf (fid, '\nMean,'); fprintf (fid, '%6.3f,', ResultsRTBlockCON(1,:,2) );
-fprintf (fid, '\nSTD,'); fprintf (fid, '%6.3f,', ResultsRTBlockCON(2,:,2) );
-fprintf (fid, '\nn,'); fprintf (fid, '%i,', A );
-
-
-for i=1:max(BlockLength(1,:))
-	A(i)=length(RTBlockINC{1,i,1});
-end
-fprintf (fid, '\n\nINCONGRUENT\n');
-fprintf (fid, 'After congruent,'); fprintf (fid, '%i,', 1:max(AllIncongruent(:,2)) );
-fprintf (fid, '\nMean,'); fprintf (fid, '%6.3f,', ResultsRTBlockINC(1,:,1) );
-fprintf (fid, '\nSTD,'); fprintf (fid, '%6.3f,', ResultsRTBlockINC(2,:,1) );
-fprintf (fid, '\nn,'); fprintf (fid, '%i,', A );
-
-for i=1:max(BlockLength(1,:))
-	A(i)=length(RTBlockINC{1,i,2});
-end
-fprintf (fid, '\n\nAfter McGurk,'); fprintf (fid, '%i,', 1:max(AllIncongruent(:,2)) );
-fprintf (fid, '\nMean,'); fprintf (fid, '%6.3f,', ResultsRTBlockINC(1,:,2) );
-fprintf (fid, '\nSTD,'); fprintf (fid, '%6.3f,', ResultsRTBlockINC(2,:,2) );
-fprintf (fid, '\nn,'); fprintf (fid, '%i,', A );
-
-
-fprintf (fid, '\n\n\nMcGURK \n\n');
-
-fprintf (fid, 'RESPONSES, McGurk Reponses (Percent.),Other,Total\n');
-fprintf (fid, 'After a congruent block, %6.4f, %i, %i\n', RelMcGurkOKMAC , sum(RespBlockMAC(3,:,1)) , sum(sum(RespBlockMAC(1:2,:,1))) );
-fprintf (fid, 'After an incongruent block, %6.4f, %i, %i\n', RelMcGurkOKMAI, sum(RespBlockMAI(3,:,1)) , sum(sum(RespBlockMAI(1:2,:,1))) );
-fprintf (fid, 'Total, %6.4f, %i, %i\n\n', RelMcGurkOK, sum ([sum(RespBlockMAC(3,:,1))  sum(RespBlockMAI(3,:,1))]) , sum([sum(RespBlockMAC(1:2,:,1)) sum(RespBlockMAI(1:2,:,1))]) );
-
-
-fprintf (fid, '\nAfter a CONGRUENT block \n\n');
-
-B = ['X' ; num2str(BlockLength(1,:)')];
-for j=1:length(BlockLength(1,:))+1
-	fprintf (fid, 'After %s CONGRUENT trials', B(j) );
-	fprintf (fid, '\nTrial number,') ; fprintf (fid, '%i,' , 1:MaxBlockLengthMAC);
-	%fprintf (fid, '\nMcGurk,') ; fprintf (fid, '%6.4f,' , RespBlockMAC(1,:,j));
-	fprintf (fid, '\nMcGurk (Percent.),') ; fprintf (fid, '%6.4f,' , RespBlockMAC(4,:,j));
-	fprintf (fid, '\nOther,') ; fprintf (fid, '%i,' , RespBlockMAC(3,:,j));
-	fprintf (fid, '\nTotal,') ; fprintf (fid, '%i,' , sum(RespBlockMAC(1:2,:,j)) );
-	fprintf (fid, '\n\n');
-end
-
-fprintf (fid,'Responses stimulus per stimulus,b,d,g,k,p,t,Other\n');
-for i=1:NbINCMovies
-	fprintf (fid, '%s,' , StimByStimMACRespRecap{1,1}(i,:) ); fprintf (fid, '%6.2f,' , StimByStimMACRespRecap{1,2}(i,:) );
-	fprintf (fid, '\n');
-end
-
-
-fprintf (fid, '\n\nAfter an INCONGRUENT block \n\n');
-B = ['X' ; num2str(BlockLength(1,:)')];
-for j=1:length(BlockLength(1,:))+1
-	fprintf (fid, 'After %s INCONGRUENT trials', B(j) );
-	fprintf (fid, '\nTrial number,') ; fprintf (fid, '%i,' , 1:MaxBlockLengthMAI);
-	%fprintf (fid, '\nMcGurk,') ; fprintf (fid, '%6.4f,' , RespBlockMAI(1,:,j));
-	fprintf (fid, '\nMcGurk (Percent.),') ; fprintf (fid, '%6.4f,' , RespBlockMAI(4,:,j));
-	fprintf (fid, '\nOther,') ; fprintf (fid, '%i,' , RespBlockMAI(3,:,j));
-	fprintf (fid, '\nTotal,') ; fprintf (fid, '%i,' , sum(RespBlockMAI(1:2,:,j)) );
-	fprintf (fid, '\n\n');
-end
-
-fprintf (fid,'Responses stimulus per stimulus,b,d,g,k,p,t,Other\n');
-for i=1:NbINCMovies
-	fprintf (fid, '%s,' , StimByStimMAIRespRecap{1,1}(i,:) ); fprintf (fid, '%6.2f,' , StimByStimMAIRespRecap{1,2}(i,:) );
-	fprintf (fid, '\n');
-end
-
-
-
-fprintf (fid, '\nREACTION TIMES,Mean,STD\n');
-fprintf (fid, 'All,%6.3f,%6.3f\n', MeanMcGurkRT(1,1), MeanMcGurkRT(2,1));
-fprintf (fid, 'Mc McGurk,%6.3f,%6.3f\n', MeanMcGurkRT(1,2), MeanMcGurkRT(2,2));
-fprintf (fid, 'No McGurk,%6.3f,%6.3f\n', MeanMcGurkRT(1,3), MeanMcGurkRT(2,3));
-
-fprintf (fid, '\nAfter a CONGRUENT block,Mean,STD\n');
-fprintf (fid, 'Mc McGurk,%6.3f,%6.3f\n', RTBlockMAC{1,MaxBlockLengthMAC+1} , RTBlockMAC{1,MaxBlockLengthMAC+2});
-fprintf (fid, 'No McGurk,%6.3f,%6.3f\n', RTBlockMAC{2,MaxBlockLengthMAC+1} , RTBlockMAC{2,MaxBlockLengthMAC+2});
-
-fprintf (fid, '\nMcGurk: Trial number,'); fprintf (fid, '%i,', 1:MaxBlockLengthMAC);
-fprintf (fid, '\nMean,'); fprintf (fid, '%6.3f,', ResultsRTBlockMAC(1,:));
-fprintf (fid, '\nSTD,'); fprintf (fid, '%6.3f,', ResultsRTBlockMAC(2,:));
-
-fprintf (fid, '\n\nNo McGurk: Trial number,'); fprintf (fid, '%i,', 1:MaxBlockLengthMAC);
-fprintf (fid, '\nMean,'); fprintf (fid, '%6.3f,', ResultsRTBlockMAC(3,:));
-fprintf (fid, '\nSTD,'); fprintf (fid, '%6.3f,', ResultsRTBlockMAC(4,:));
-
-fprintf (fid, '\n\nAfter an INCONGRUENT block,Mean,STD\n');
-fprintf (fid, 'Mc McGurk,%6.3f,%6.3f\n', RTBlockMAI{1,MaxBlockLengthMAI+1} , RTBlockMAI{1,MaxBlockLengthMAI+2});
-fprintf (fid, 'No McGurk,%6.3f,%6.3f\n', RTBlockMAI{2,MaxBlockLengthMAI+1} , RTBlockMAI{2,MaxBlockLengthMAI+2});
-
-fprintf (fid, '\nMcGurk: Trial number,'); fprintf (fid, '%i,', 1:MaxBlockLengthMAI);
-fprintf (fid, '\nMean,'); fprintf (fid, '%6.3f,', ResultsRTBlockMAI(1,:));
-fprintf (fid, '\nSTD,'); fprintf (fid, '%6.3f,', ResultsRTBlockMAI(2,:));
-
-fprintf (fid, '\n\nNo McGurk: Trial number,'); fprintf (fid, '%i,', 1:MaxBlockLengthMAI);
-fprintf (fid, '\nMean,'); fprintf (fid, '%6.3f,', ResultsRTBlockMAI(3,:));
-fprintf (fid, '\nSTD,'); fprintf (fid, '%6.3f,', ResultsRTBlockMAI(4,:));
-
-
-
-
-
-
-
-
-
-
 
 
 catch
 cd ..
 lasterror
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

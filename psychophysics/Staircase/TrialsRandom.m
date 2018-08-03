@@ -19,7 +19,7 @@ function [Trials] = TrialsRandom (NoiseSoundRange, StimType2Test, NbTrialsPerCon
 
 
 if (nargin < 1) || isempty(NoiseSoundRange)==1
-    NoiseSoundRange = linspace (0,0.8,14);
+    NoiseSoundRange = [repmat(linspace (0, 0.8, 14), 8, 1)];
 end;
 
 if (nargin < 2) || isempty(StimType2Test)==1
@@ -27,7 +27,7 @@ if (nargin < 2) || isempty(StimType2Test)==1
 end;
 
 if (nargin < 3) || isempty(NbTrialsPerCondition)==1
-	NbTrialsPerCondition = 6;
+	NbTrialsPerCondition = 4;
 end;
 
 if (nargin < 4) || isempty(McDir)==1
@@ -73,6 +73,8 @@ IncongMoviesDir = strcat(pwd, filesep, InconDir, filesep);
 MoviesDir{2,1} = IncongMoviesDir;
 
 fprintf('\nLooking for movies in the directories:\n %s\n\n', McMoviesDir);
+fprintf('\nLooking for movies in the directories:\n %s\n\n', CongMoviesDir);
+fprintf('\nLooking for movies in the directories:\n %s\n\n', IncongMoviesDir);
 
 % -------------------------------------------------------------------------
 
@@ -94,7 +96,7 @@ if (NbMcSound~=NbMcMovies) % Check if there are actually as many movies as sound
 end;
 
 % Cartesian product... Solution found online. Seems also possible to use the ALLCOMB function if it has been downloaded from mathworks exchange.
-sets = {1:NbMcMovies, 1:length(NoiseSoundRange)};
+sets = {1:NbMcMovies, 1:length(NoiseSoundRange(1,:))};
 [x y] = ndgrid(sets{:});
 % List of all possible combinations and repeats the matrix by the amount of times per condition.
 Conditions = [x(:) y(:)];
@@ -118,7 +120,7 @@ if (NbCongSound~=NbCongMovies) % Check if there are actually as many movies as s
     error('Different numbers of sound and movies in the congruent folder.');
 end;
 
-sets = {1:NbCongMovies, 1:length(NoiseSoundRange)};
+sets = {1:NbCongMovies, 1:length(NoiseSoundRange(1,:))};
 [x y] = ndgrid(sets{:});
 Conditions = [x(:) y(:)];
 
@@ -140,19 +142,11 @@ if (NbIncongSound~=NbIncongMovies)
     error('Different numbers of sound and movies in the incongruent folder.');
 end;
 
-sets = {1:NbIncongMovies, 1:length(NoiseSoundRange)};
+sets = {1:NbIncongMovies, 1:length(NoiseSoundRange(1,:))};
 [x y] = ndgrid(sets{:});
 Conditions = [x(:) y(:)];
 
 A {2,1} = repmat(Conditions, NbTrialsPerCondition, 1);
-
-% -------------------------------------------------------------------------
-
-
-% Generate a randomly ordered vector for the trial orders.
-% TrialsIndices = [ randperm(length(A{1,1}))' randperm(length(A{2,1}))' randperm(length(A{3,1}))' ];
-% TrialCounter = ones (1,3);
-
 
 
 
@@ -179,8 +173,9 @@ for i = 1:(length(A{q+1,1})) ;
     Mov = [MoviesDir{q+1,1} Stim];
     Sound = strcat(Mov(1:end-4), SoundType); % Notes the name of the sound file corresponding to the movie
 
-    Trials{1,1} = [Trials{1,1} ; i q A{q+1,1}(TrialsIndices(TrialCounter), 2 ) ]; % Notes the trial number and the Noiselevel used for this trial
-
+    Trials{1,1} = [Trials{1,1} ; i q NoiseSoundRange( A{q+1,1}(TrialsIndices(TrialCounter),1) , A{q+1,1}(TrialsIndices(TrialCounter),2) )]; % Notes the trial number and the Noiselevel used for this trial
+    Trials{5,1}(i,:) = A{q+1,1}(TrialsIndices(TrialCounter), : );
+    
     if (i==1) % Otherwise the first line of the Trials{2,1} and {3,1} matrixes will be empty rows
         Trials{2,1} = char(Stim(1:end-4)); % Thus creates a first row to the stim matrix
         Trials{3,1} = char(Mov); % Idem but for the movie stim absolute matrix
@@ -197,15 +192,6 @@ end
 
 fprintf('\nRandomization Done.\n\n');
 
-
-fprintf('\nThis run should last %.0f min.\n\n', ceil( 2.4 * length(Trials{1,1}(:,1)) / 60) );
-
-fprintf('Do you want to continue?\n')
-Confirm=input('Type ok to continue. ', 's');
-if ~strcmp(Confirm,'ok') % Abort experiment if too long
-	fprintf('Experiment aborted.\n')
-        return
-end
-
 Trials{1,1}
+Trials{2,1}
 

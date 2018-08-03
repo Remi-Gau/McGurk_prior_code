@@ -93,8 +93,8 @@ SamplingFreq = 44100;
 NbChannels = 2;
 LatBias = 0;
 
-McGurkNoiseRange = 	[repmat(0.15,1,8)];
-INCNoiseRange = 	[repmat(0.15,1,8)];
+McGurkNoiseRange = 	[.0 .1 .1 .25 repmat(0,1,4)];
+INCNoiseRange = 	[.0 .1 .1 .25 .25 .1 .1 .0];
 CONNoiseRange = 	[INCNoiseRange([4 6 8 1 5 2 7 3])];
 
 % Adds some whitenoise to the sound track : 0 -> no noise; 1 -> noise level equivalent to the max intensity present in the orginql soundtrack.
@@ -119,11 +119,6 @@ end
 % Parameters to cut the movies
 height = 576;
 width = 720;
-
-% Parameters to cut the movies
-MovieOrigin = [290  350];
-MovieDim2Extract = [160 110];
-
 
 % Horizontal Offset
 HorizonOffset = 18;
@@ -165,26 +160,11 @@ if MacKeyboard==ResponseBox
     RespT = 'LeftArrow';
 end
 
-ResponseTimeWindow = 0.6;
-
 
 % -------------------------------------------------------------------------
 % -------------------------------------------------------------------------
 
 load (FileToLoad);
-
-% {1,1} contains the trial number and the type of stimuli presented on this trial
-% Trials(i,1:5) = [i p Choice n m];
-% i		 is the trial number
-% p		 is the trial number in the current block
-% Choice	 contains the type of stimuli presented on this trial : 0--> Congruent, 1--> Incongruent, 2--> Counterphase.
-% n 		 is the variable that says what kind of block came before the present one. Equals to 666 if there was no previous block. : 0--> Congruent, 1--> Incongruent, 2--> McGurk.
-% m 		 is the variable that says the length of the block that came before the present one. Equals to 666 if there was no previous block.
-
-% {2,1} contains the name of the stim used
-% {3,1} contains the level of noise used for this stimuli
-% {4,1} contains the absolute path of the corresponding movie to be played
-% {5,1} contains the absolute path of the corresponding sound to be played
 
 
 NbTrials = length(Trials{1,1})
@@ -222,6 +202,10 @@ end
 
 clear McGurkNoiseRange INCNoiseRange CONNoiseRange
 
+
+
+
+
 try
   
 % SOUND INIT
@@ -237,22 +221,12 @@ ScreenID = max(Screen('Screens'));
 % Open 'windowrect' sized window on screen, with black [0] background color:
 [win winrect] = Screen('OpenWindow', ScreenID, 0);
 
+
 Win_W = (winrect(3) - winrect(1));
 Win_H = (winrect(4) - winrect(2));
 
 
-% Scale = 3; % Movie rescale
-Scale = Win_H/576; % Movie rescale
-
-
-
-% Define source and destination rectangle for the movie textures.
-srcRect = [MovieOrigin  MovieOrigin+MovieDim2Extract];
-dstRect = [(Win_W - MovieDim2Extract(1)*Scale)/2     (Win_H - MovieDim2Extract(2)*Scale)/2 ...
-           (Win_W - MovieDim2Extract(1)*Scale)/2+MovieDim2Extract(1)*Scale    (Win_H - MovieDim2Extract(2)*Scale)/2+MovieDim2Extract(2)*Scale];
-
-
-       
+Scale = Win_H/576; % Movie rescale       
 Elevate = 0.11; % Raise the movie by a factor of "Elevate * Win_H"
 srcRect = [0 0 width height];
 dstRect = [((Win_W - Scale*width)/2)-HorizonOffset ((Win_H - Scale*height)/2)-Elevate*Win_H ((Win_W + Scale*width)/2)-HorizonOffset ((Win_H + Scale*height)/2)-Elevate*Win_H];
@@ -369,27 +343,16 @@ tic
 %       TRIALS LOOPS        %
 % --------------------------%
 
-% NbTrials=6;
+% NbTrials=24;
 
 ListenChar(2);
 
 for j=1:NbTrials
     
     
-    if mod(j,13)==0
-        WaitSecs(5);
+    if mod(j,12)==1 && j~=1
+        WaitSecs(IBI);
     end
-    
-    if j==round(NbTrials/2)+1
-		DrawFormattedText(win, 'Press the space bar to continue.', 'center', 'center', 255);
-        Screen('Flip', win);
-        
-        while strcmp(KbName(keyCode),RespOTHER)==0
-        [secs, keyCode, deltaSecs] = KbWait(ResponseBox);
-        KbName(keyCode)
-        end
-        
-	end;
 	
 	% Check for experiment abortion from operator
     [keyIsDown,secs,keyCode] = KbCheck(MacKeyboard);
@@ -469,8 +432,8 @@ for j=1:NbTrials
 	
 	[tex, pts] = Screen('GetMovieImage', win, movie); % Gets the second movie frame and turns into a PTB texture
     
-	% Playback loop to play the rest of the movie, that is as long as the texture from GetMovieImage is not <= to 0
-	% while tex > 0
+	% Playback loop to play the rest of the movie, that is as long as the
+	% texture from GetMovieImage is not <= to 0
     for h=1:MovieLength
 			
 		Screen('DrawTexture', win, tex, srcRect, dstRect); % Draw the texture to the screen
@@ -489,10 +452,30 @@ for j=1:NbTrials
 
 	DrawFormattedText(win, '.', 'center' , 'center' , 255);
     Screen('Flip', win);
-	
-	WaitSecs(1.6 + ResponseTimeWindow - (GetSecs - T_VisualOnset));
-   
+    
+    
+    
+    % Close the movie but before we note the number of frame dropped during
+    % the whole presentation of the movie
+    Screen('PlayMovie', movie, 0);
+    Screen('CloseMovie', movie);
 
+    % Stop sound, collect onset timestamp of sound
+    T_AudioOnset = PsychPortAudio('Stop', SoundHandle, 1) ; 
+	
+    
+    
+    
+    
+    if Trials{1,1}(j,2)~=12
+        WaitSecs( (Trials{1,1}(j+1,3)-Trials{1,1}(j,3)) - (GetSecs - T_VisualOnset) ) ;
+    else 
+        WaitSecs( BlockDuration-Trials{1,1}(j,3) - (GetSecs - T_VisualOnset));
+    end
+    
+    
+    
+    
 	
     % --------------------------%
 	%        RESPONSE           %
@@ -510,26 +493,13 @@ for j=1:NbTrials
 		RT = X - T_VisualOnset;
 		Resp = Y ;
 	else
-		RT = 3 ;
+		RT = 999 ;
 		Resp = 999 ;
-	end	
-	
-	
-	
-	% --------------------------%
-	%  CLOSE TEX & APPENDS      %
-	% --------------------------%
+    end
        
-    % Close the movie but before we note the number of frame dropped during
-    % the whole presentation of the movie
-    Screen('PlayMovie', movie, 0);
-    Screen('CloseMovie', movie);
-
-    % Stop sound, collect onset timestamp of sound
-    T_AudioOnset = PsychPortAudio('Stop', SoundHandle, 1) ;    	
 
     % APPENDS RESULTS to the Trials{1,1} matrix
-    Trials{1,1}(j,5:6) = [RT Resp];       
+    Trials{1,1}(j,6:7) = [RT Resp];       
 
 
 
@@ -539,8 +509,16 @@ for j=1:NbTrials
     end
     
     clear Z
-        
 
+    
+    
+    if j==1
+       StartXP=T_VisualOnset;
+    end
+    
+    CollectVisualOnset(j)=T_VisualOnset-StartXP;
+    
+    
 end
 
 toc
@@ -590,67 +568,69 @@ save(SavedMat);
 
 for i=1:NbTrials
 
-	   switch KbName( Trials{1,1}(i,6) ) % Check responses given
+	   switch KbName( Trials{1,1}(i,7) ) % Check responses given
             case RespB
                 if Trials{2,1}(i,8)=='B'
-                    Trials{1,1}(i,7) = 1;
-                elseif Trials{1,1}(i,3)==2
-                    Trials{1,1}(i,7) = 1;                
+                    Trials{1,1}(i,8) = 1;
+                elseif Trials{1,1}(i,5)==2
+                    Trials{1,1}(i,8) = 1;                
                 else
-                    Trials{1,1}(i,7) = 0;
+                    Trials{1,1}(i,8) = 0;
                 end;
 
             case RespD
                 if Trials{2,1}(i,8)=='D'
-                    Trials{1,1}(i,7) = 1;
-                elseif Trials{1,1}(i,3)==2 & Trials{2,1}(i,8)~='B'
-                    Trials{1,1}(i,7) = 1;  
+                    Trials{1,1}(i,8) = 1;
+                elseif Trials{1,1}(i,5)==2 & Trials{2,1}(i,8)~='B'
+                    Trials{1,1}(i,8) = 1;  
                 else
-                    Trials{1,1}(i,7) = 0;
+                    Trials{1,1}(i,8) = 0;
                 end;
 
             case RespG
                 if Trials{2,1}(i,8)=='G'
-                    Trials{1,1}(i,7) = 1;
-                elseif Trials{1,1}(i,3)==2
-                    Trials{1,1}(i,7) = 1;
+                    Trials{1,1}(i,8) = 1;
+                elseif Trials{1,1}(i,5)==2
+                    Trials{1,1}(i,8) = 1;
                 else
-                    Trials{1,1}(i,7) = 0;
+                    Trials{1,1}(i,8) = 0;
                 end
 
             case RespK
                 if Trials{2,1}(i,8)=='K'
-                    Trials{1,1}(i,7) = 1;
-                elseif Trials{1,1}(i,3)==2
-                    Trials{1,1}(i,7) = 1;
+                    Trials{1,1}(i,8) = 1;
+                elseif Trials{1,1}(i,5)==2
+                    Trials{1,1}(i,8) = 1;
                 else            
-                    Trials{1,1}(i,7) = 0;
+                    Trials{1,1}(i,8) = 0;
                 end
 
             case RespP
                 if Trials{2,1}(i,8)=='P'
-                    Trials{1,1}(i,7) = 1;
-                elseif Trials{1,1}(i,3)==2
-                    Trials{1,1}(i,7) = 1;                
+                    Trials{1,1}(i,8) = 1;
+                elseif Trials{1,1}(i,5)==2
+                    Trials{1,1}(i,8) = 1;                
                 else
-                    Trials{1,1}(i,7) = 0;
+                    Trials{1,1}(i,8) = 0;
                 end;
 
             case RespT
                 if Trials{2,1}(i,8)=='T'
-                    Trials{1,1}(i,7) = 1;
-                elseif Trials{1,1}(i,3)==2 & Trials{2,1}(i,8)~='P'
-                    Trials{1,1}(i,7) = 1;                                
+                    Trials{1,1}(i,8) = 1;
+                elseif Trials{1,1}(i,5)==2 & Trials{2,1}(i,8)~='P'
+                    Trials{1,1}(i,8) = 1;                                
                 else
-                    Trials{1,1}(i,7) = 0;
+                    Trials{1,1}(i,8) = 0;
                 end;
 
             otherwise
-                Trials{1,1}(i,7) = 999;
+                Trials{1,1}(i,8) = 999;
        end
 end
 
-clear i
+
+clear i ans NbChannels X Y StartXP
+
 
 % --------------------------%
 %       SAVING DATA         %
