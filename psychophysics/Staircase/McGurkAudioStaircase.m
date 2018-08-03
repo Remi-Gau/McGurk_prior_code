@@ -88,8 +88,6 @@ end
 %      Global Variables     %
 % --------------------------%
 
-NbTrialsPerCondition = 6;
-
 % Stimuli file types
 MovieType = '.mov';
 SoundType = '.wav';
@@ -99,10 +97,12 @@ ConDir = 'CongMovies';
 InconDir = 'IncongMovies';
 
 % Shorten Movie at the beginning by
-MovieBegin = 0.04*10; % in secs
+MovieBegin = 0.04*7; % in secs
+
+MovieLength = 40; % in frames
 
 % Parameters to cut the movies
-height = 576;
+height = 576; 
 width = 720;
 
 % Parameters to extract the mouth
@@ -161,14 +161,21 @@ if MacKeyboard==ResponseBox & ismac==1
     RespT = 'LeftArrow';
 end 
 
-ResponseTimeWindow = 0.7;
-ResponseTimeWindow = 0.4;
+ResponseTimeWindow = 0.6;
 
 
 % -------------------------------------------------------------------------
 
+StimType2Test = input('Which category to test : 1 = CON ; 2 = INC ; 3 = McGurk ? ');
 
-[Trials] = TrialsRandom (NoiseSoundRange, NbTrialsPerCondition, McDir, ConDir, InconDir, MovieType, SoundType);
+if StimType2Test==3
+    NbTrialsPerCondition=4;
+else
+    NbTrialsPerCondition=3;
+end
+
+[Trials] = TrialsRandom (NoiseSoundRange, StimType2Test, NbTrialsPerCondition, McDir, ConDir, InconDir, MovieType, SoundType)
+
 % Returns a {4,1} cell
 % {1,1} contains the trial number and the type of stimuli presented on this trial
 % Trials(i,1) = [i NoiseLevelIndex];
@@ -341,6 +348,8 @@ tic
 ListenChar(2);
 
 for j=1:NbTrials
+    
+    % tic
 
 	% Check for experiment abortion from operator
     [keyIsDown,secs,keyCode] = KbCheck(MacKeyboard);
@@ -370,7 +379,8 @@ for j=1:NbTrials
    	Z = A + Z;
     clear A;
     
-    Z = Z(: , SoundBegin*SamplingFreq:end);
+    
+    Z = Z(: , round(SoundBegin*SamplingFreq):round(SoundBegin*SamplingFreq+MovieLength*0.04*SamplingFreq));
     	
    	% Fill up audio buffer with the sound
     PsychPortAudio('FillBuffer', SoundHandle, Z );
@@ -412,7 +422,8 @@ for j=1:NbTrials
 	[tex, pts] = Screen('GetMovieImage', win, movie); % Gets the second movie frame and turns into a PTB texture
     
 	% Playback loop to play the rest of the movie, that is as long as the texture from GetMovieImage is not <= to 0
-	while tex > 0
+	% while tex > 0
+    for h=1:MovieLength
 			
 		Screen('DrawTexture', win, tex, srcRect, dstRect); % Draw the texture to the screen
 		Screen('Close', tex); % Let go of the texture
@@ -428,9 +439,11 @@ for j=1:NbTrials
     Screen('Flip', win);
 
     
-    Bli = EndMovie - T_VisualOnset;
+    % Bli = EndMovie - T_VisualOnset;
     
 	WaitSecs(1.6 + ResponseTimeWindow - (GetSecs - T_VisualOnset));
+    
+    % Bla = GetSecs - T_VisualOnset;
 	
 	
 	% --------------------------%
@@ -451,7 +464,7 @@ for j=1:NbTrials
 		Resp = Y ;
 	else
 		RT = 3 ;
-		Resp = 666 ;
+		Resp = 1 ;
 	end
     
     
@@ -469,6 +482,8 @@ for j=1:NbTrials
     if mod(j,NbTrials/10)==0
             save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange'); 
     end;
+    
+    % toc
     
 end;
 
@@ -493,7 +508,7 @@ ListenChar
 psychrethrow(psychlasterror);
 end;
 
-toc
+%toc
 
 % Saving the data
 save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange');

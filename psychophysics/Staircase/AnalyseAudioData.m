@@ -228,6 +228,7 @@ end
 
 Missed = length( [find(TotalTrials{1,1}(:,4)==3)' find(TotalTrials{1,1}(:,4)<0.5)'] ) / length (TotalTrials{1,1}(:,4))
 
+
 % Type of response depending on stimuli
 
 for i=1:NbMcMovies
@@ -267,25 +268,24 @@ if JustMcGurk==0
     end
 
 
-    for i=1:NbCongMovies
-
-        figure(n)
-        n = n+1;
-
-        for j=1:length(NoiseSoundRange)
-            C(:,j) = RespTypeRecap{i,2,1}(:,j)./sum(RespTypeRecap{i,2,1}(:,j));
-        end
-        bar(C', 'stacked')
-        legend(['b'; 'd'; 'g'; 'k'; 'p'; 't'; ' '])
-        t=title (RespTypeRecap{i,1,1});
-        set(t,'fontsize',15);
-        set(gca,'tickdir', 'out', 'xtick', 1:length(NoiseSoundRange) ,'xticklabel', NoiseSoundRange, 'ticklength', [0.005 0], 'fontsize',13)
-        axis 'tight'
-
-    end
+%     for i=1:NbCongMovies
+% 
+%         figure(n)
+%         n = n+1;
+% 
+%         for j=1:length(NoiseSoundRange)
+%             C(:,j) = RespTypeRecap{i,2,1}(:,j)./sum(RespTypeRecap{i,2,1}(:,j));
+%         end
+%         bar(C', 'stacked')
+%         legend(['b'; 'd'; 'g'; 'k'; 'p'; 't'; ' '])
+%         t=title (RespTypeRecap{i,1,1});
+%         set(t,'fontsize',15);
+%         set(gca,'tickdir', 'out', 'xtick', 1:length(NoiseSoundRange) ,'xticklabel', NoiseSoundRange, 'ticklength', [0.005 0], 'fontsize',13)
+%         axis 'tight'
+% 
+%     end
 
 end
-
 
 
 % Percent of response correct or McGurk response depending on intensity of
@@ -320,17 +320,17 @@ if JustMcGurk==0
     plot(StimLevelsFineGrain, ProportionCorrectModel,'g-','linewidth',3);
     set(gca,'ylim', [0 1])
 
-    subplot(133)
-    title ('Congruent')
-    hold on
-    plot(RespRecap(1,:,1), [RespRecap(3,:,1)./sum(RespRecap(2:4,:,1))], 'k.', 'markersize', 30)
-
-    [paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, RespRecap(3,:,1), sum(RespRecap(2:4,:,1)), ...
-        searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
-    ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
-
-    plot(StimLevelsFineGrain, ProportionCorrectModel,'g-','linewidth',3);
-    set(gca,'ylim', [0 1])
+%     subplot(133)
+%     title ('Congruent')
+%     hold on
+%     plot(RespRecap(1,:,1), [RespRecap(3,:,1)./sum(RespRecap(2:4,:,1))], 'k.', 'markersize', 30)
+% 
+%     [paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, RespRecap(3,:,1), sum(RespRecap(2:4,:,1)), ...
+%         searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
+%     ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
+% 
+%     plot(StimLevelsFineGrain, ProportionCorrectModel,'g-','linewidth',3);
+%     set(gca,'ylim', [0 1])
 
 end
 
@@ -339,19 +339,29 @@ end
 figure(n)
 n = n+1;
 
-color = ['r' 'g' 'b' 'c' 'y' 'm'];
+% color = ['r' ; 'g' ; 'b' ; 'c' ; 'y' ; 'm' ; 'k'];
+
+color = [0 0 0; ...
+         1 1 0; ...
+         1 0 0; ...
+         0 1 1; ...
+         0 1 0; ...
+         0 0 1; ...
+         .5 .5 .5; ...
+         .5 .5 0];
 
 title ('McGurk')
 LegendContent = [];
 hold on
 for i=1:NbMcMovies
-	plot(StimByStimRespRecap{i,1,3}(1,:), [StimByStimRespRecap{i,1,3}(3,:)./sum(StimByStimRespRecap{i,1,3}(2:4,:))], '.--', 'Color', color(i),'MarkerEdgeColor', color(i), 'markersize', 20)
+	plot(StimByStimRespRecap{i,1,3}(1,:), [StimByStimRespRecap{i,1,3}(3,:)./sum(StimByStimRespRecap{i,1,3}(2:4,:))], '.--', 'Color', color(i,:),'MarkerEdgeColor', color(i,:), 'markersize', 20)
 	
 	[paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, StimByStimRespRecap{i,1,3}(3,:), sum(StimByStimRespRecap{i,1,3}(2:4,:)), ...
 		searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
 	ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
 
-	plot(StimLevelsFineGrain, ProportionCorrectModel, color(i), 'linewidth',2);
+	plot(StimLevelsFineGrain, ProportionCorrectModel, 'Color', color(i,:), 'linewidth',2);
+    
 	
 	LegendContent = [LegendContent ; StimByStimRespRecap{i,2,3} ; blanks(length(StimByStimRespRecap{i,2,3})) ];
 end
@@ -371,43 +381,42 @@ if JustMcGurk==0
     LegendContent = [];
     hold on
     for i=1:NbIncongMovies
-        plot(StimByStimRespRecap{i,1,2}(1,:), [StimByStimRespRecap{i,1,2}(3,:)./sum(StimByStimRespRecap{i,1,2}(2:3,:))], '.--', 'Color', color(i), 'MarkerEdgeColor', color(i), 'markersize', 20)
+        plot(StimByStimRespRecap{i,1,2}(1,:), [StimByStimRespRecap{i,1,2}(3,:)./sum(StimByStimRespRecap{i,1,2}(2:3,:))], '.--', 'Color', color(i,:), 'MarkerEdgeColor', color(i,:), 'markersize', 20)
 
         [paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, StimByStimRespRecap{i,1,2}(3,:), sum(StimByStimRespRecap{i,1,2}(2:3,:)), ...
             searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
         ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
 
-        plot(StimLevelsFineGrain, ProportionCorrectModel, color(i), 'linewidth',2);
+        plot(StimLevelsFineGrain, ProportionCorrectModel, 'Color', color(i,:), 'linewidth',2);
 
         LegendContent = [LegendContent ; StimByStimRespRecap{i,2,2} ; blanks(length(StimByStimRespRecap{i,2,2})) ];
     end
     legend (LegendContent, 'Location', 'SouthEast')
     set(gca,'ylim', [0 1])
 
-    % Percent of response correct or CON response depending on intensity of white noise
-    figure(n)
-    n = n+1;
-
-    title ('Congruent')
-    LegendContent = [];
-    hold on
-    for i=1:NbCongMovies
-        plot(StimByStimRespRecap{i,1,1}(1,:), [StimByStimRespRecap{i,1,1}(3,:)./sum(StimByStimRespRecap{i,1,1}(2:3,:))], '.--', 'Color', color(i), 'MarkerEdgeColor', color(i), 'markersize', 20)
-
-        [paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, StimByStimRespRecap{i,1,1}(3,:), sum(StimByStimRespRecap{i,1,1}(2:3,:)), ...
-            searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
-        ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
-
-        plot(StimLevelsFineGrain, ProportionCorrectModel, color(i), 'linewidth',2);
-
-        LegendContent = [LegendContent ; StimByStimRespRecap{i,2,1} ; blanks(length(StimByStimRespRecap{i,2,1}))];
-    end
-    legend (LegendContent, 'Location', 'SouthEast')
-    set(gca,'ylim', [0 1])
+%     % Percent of response correct or CON response depending on intensity of white noise
+%     figure(n)
+%     n = n+1;
+% 
+%     title ('Congruent')
+%     LegendContent = [];
+%     hold on
+%     for i=1:NbCongMovies
+%         plot(StimByStimRespRecap{i,1,1}(1,:), [StimByStimRespRecap{i,1,1}(3,:)./sum(StimByStimRespRecap{i,1,1}(2:3,:))], '.--', 'Color', color(i,:), 'MarkerEdgeColor', color(i,:), 'markersize', 20)
+% 
+%         [paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, StimByStimRespRecap{i,1,1}(3,:), sum(StimByStimRespRecap{i,1,1}(2:3,:)), ...
+%             searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
+%         ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
+% 
+%         plot(StimLevelsFineGrain, ProportionCorrectModel, 'Color', color(i,:), 'linewidth',2);
+% 
+%         LegendContent = [LegendContent ; StimByStimRespRecap{i,2,1} ; blanks(length(StimByStimRespRecap{i,2,1}))];
+%     end
+%     legend (LegendContent, 'Location', 'SouthEast')
+%     set(gca,'ylim', [0 1])
 
 
 end
-
 
 
 if (IsOctave==0)
@@ -452,7 +461,7 @@ else
     	end;
 end;
 
-clear A B C ans searchGrid ParOrNonPar paramsFree PF options lapseLimits McDir ConDir InconDir McMoviesDir CongMoviesDir IncongMoviesDir List SizeList i n paramsValues LL exitflag output ProportionCorrectModel StimLevelsFineGrain LegendContent color
+clear A B C n ans searchGrid ParOrNonPar paramsFree PF options lapseLimits McDir ConDir InconDir McMoviesDir CongMoviesDir IncongMoviesDir List SizeList i n paramsValues LL exitflag output ProportionCorrectModel StimLevelsFineGrain LegendContent color
 
 cd ..
 

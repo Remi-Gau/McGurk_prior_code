@@ -1,4 +1,4 @@
-function [Trials] = TrialsRandom (NoiseRange, NbTrialsPerCondition, McDir, ConDir, InconDir, MovieType, SoundType);
+function [Trials] = TrialsRandom (NoiseSoundRange, StimType2Test, NbTrialsPerCondition, McDir, ConDir, InconDir, MovieType, SoundType)
 
 % Randomise the trials for the "McGurk Audio Staircase" experiment
 %
@@ -18,33 +18,39 @@ function [Trials] = TrialsRandom (NoiseRange, NbTrialsPerCondition, McDir, ConDi
 % -------------------------------------------------------------------------
 
 
-if (nargin < 1) || isempty(NoiseRange)==1
-    NoiseRange = linspace (0,0.8,14);
+if (nargin < 1) || isempty(NoiseSoundRange)==1
+    NoiseSoundRange = linspace (0,0.8,14);
 end;
 
-if (nargin < 2) || isempty(NbTrialsPerCondition)==1 % 0 to hide some errors and some check-up
+if (nargin < 2) || isempty(StimType2Test)==1
+    StimType2Test = 3;
+end;
+
+if (nargin < 3) || isempty(NbTrialsPerCondition)==1
 	NbTrialsPerCondition = 6;
 end;
 
-if (nargin < 3) || isempty(McDir)==1
+if (nargin < 4) || isempty(McDir)==1
     McDir = 'McGurkMovies';
 end;
 
-if (nargin < 4) || isempty(ConDir)==1
+if (nargin < 5) || isempty(ConDir)==1
     ConDir = 'CongMovies';
 end;
 
-if (nargin < 5) || isempty(InconDir)==1
+if (nargin < 6) || isempty(InconDir)==1
     InconDir = 'IncongMovies';
 end;
 
-if (nargin < 6) || isempty(MovieType)==1
+if (nargin < 7) || isempty(MovieType)==1
     MovieType = '.mov';
 end;
 
-if (nargin < 7) || isempty(SoundType)==1
+if (nargin < 8) || isempty(SoundType)==1
     SoundType = '.wav';
 end;
+
+
 
 
 	      
@@ -88,7 +94,7 @@ if (NbMcSound~=NbMcMovies) % Check if there are actually as many movies as sound
 end;
 
 % Cartesian product... Solution found online. Seems also possible to use the ALLCOMB function if it has been downloaded from mathworks exchange.
-sets = {1:NbMcMovies, 1:length(NoiseRange)};
+sets = {1:NbMcMovies, 1:length(NoiseSoundRange)};
 [x y] = ndgrid(sets{:});
 % List of all possible combinations and repeats the matrix by the amount of times per condition.
 Conditions = [x(:) y(:)];
@@ -112,7 +118,7 @@ if (NbCongSound~=NbCongMovies) % Check if there are actually as many movies as s
     error('Different numbers of sound and movies in the congruent folder.');
 end;
 
-sets = {1:NbCongMovies, 1:length(NoiseRange)};
+sets = {1:NbCongMovies, 1:length(NoiseSoundRange)};
 [x y] = ndgrid(sets{:});
 Conditions = [x(:) y(:)];
 
@@ -134,7 +140,7 @@ if (NbIncongSound~=NbIncongMovies)
     error('Different numbers of sound and movies in the incongruent folder.');
 end;
 
-sets = {1:NbIncongMovies, 1:length(NoiseRange)};
+sets = {1:NbIncongMovies, 1:length(NoiseSoundRange)};
 [x y] = ndgrid(sets{:});
 Conditions = [x(:) y(:)];
 
@@ -148,7 +154,7 @@ A {2,1} = repmat(Conditions, NbTrialsPerCondition, 1);
 % TrialCounter = ones (1,3);
 
 
-StimType2Test = input('Which category to test : 1 = CON ; 2 = INC ; 3 = McGurk ? ');
+
 
 % ----- Randomise trials -----
 
@@ -192,7 +198,7 @@ end
 fprintf('\nRandomization Done.\n\n');
 
 
-fprintf('\nThis run should last %.0f min.\n\n', ceil( 2 * length(Trials{1,1}(:,1)) / 60) );
+fprintf('\nThis run should last %.0f min.\n\n', ceil( 2.4 * length(Trials{1,1}(:,1)) / 60) );
 
 fprintf('Do you want to continue?\n')
 Confirm=input('Type ok to continue. ', 's');
