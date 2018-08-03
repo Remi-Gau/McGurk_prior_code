@@ -56,6 +56,8 @@ else
 
 end
 
+ExternalVolumeSoundLevel = input('External Volume Sound Level ? ');
+
 
 
 % Data recording directories
@@ -117,14 +119,14 @@ SamplingFreq = 44100;
 NbChannels = 2;
 LatBias = 0;
 
-NbLevels = 15;
+NbLevels = 8;
 % Adds some whitenoise to the sound track : 0 -> no noise; 1 -> noise level
 % equivqlent to the max intensity present in the orginal soundtrack
-NoiseSoundRange = [ linspace(0, 0.25, NbLevels); ...
-                    linspace(0, 0.25, NbLevels); ...
-                    linspace(0, 0.25, NbLevels); ...
-                    linspace(0, 0.25, NbLevels); ...
-                    linspace(0, 0.25, NbLevels); ...
+NoiseSoundRange = [ linspace(0, 0.3, NbLevels); ...
+                    linspace(0, 0.3, NbLevels); ...
+                    linspace(0, 0.3, NbLevels); ...
+                    linspace(0, 0.3, NbLevels); ...
+                    linspace(0, 0.3, NbLevels); ...
                     linspace(0, 0.5, NbLevels); ...
                     linspace(0, 0.5, NbLevels); ...
                     linspace(0, 0.5, NbLevels)]; 
@@ -176,7 +178,7 @@ if MacKeyboard==ResponseBox & ismac==1
     RespT = 'LeftArrow';
 end
 
-ResponseTimeWindow = 0.8;
+ResponseTimeWindow = 1.1;
 
 
 % -------------------------------------------------------------------------
@@ -247,10 +249,10 @@ dstRect = [((Win_W - Scale*width)/2)-HorizonOffset ((Win_H - Scale*height)/2)-El
 
 	
 
-ifi = Screen('GetFlipInterval', win);
-FrameRate = Screen('FrameRate', ScreenID);
+ifi = Screen('GetFlipInterval', win)
+FrameRate = Screen('FrameRate', ScreenID)
 if FrameRate == 0
-	FrameRate = 1/ifi;
+	FrameRate = 1/ifi
 end;
 
 Screen(win,'TextFont', 'Arial');
@@ -506,7 +508,7 @@ for j=1:NbTrials
 	Trials{1,1}(j, 4:5) = [RT Resp];
   
     if mod(j,NbTrials/10)==0
-            save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange', 'StimType2Test'); 
+            save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange', 'StimType2Test', 'ExternalVolumeSoundLevel'); 
     end;
     
 end;
@@ -535,7 +537,7 @@ end;
 toc
 
 % Saving the data
-save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange', 'StimType2Test');
+save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange', 'StimType2Test', 'ExternalVolumeSoundLevel');
 
 
 % --------------------------%
@@ -617,4 +619,4 @@ end
 % --------------------------%
 
 % Saving the data
-save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange', 'StimType2Test');
+save (SavedMat, 'Trials', 'NbTrials', 'SubjID', 'Run', 'RespB', 'RespG', 'RespK', 'RespD', 'RespP', 'RespT', 'RespOTHER', 'NoiseSoundRange', 'StimType2Test', 'ExternalVolumeSoundLevel');

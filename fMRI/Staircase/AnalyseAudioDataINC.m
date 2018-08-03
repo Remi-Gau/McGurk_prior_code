@@ -54,7 +54,7 @@ IncongMoviesDir = strcat(pwd, filesep, InconDir, filesep);
 IncongMoviesDirList = dir(strcat(IncongMoviesDir,'*', MovieType));
 NbIncongMovies = size(IncongMoviesDirList,1);
 
-StimByStimRespRecap = cell(NbMcMovies,2);
+StimByStimRespRecap = cell(NbIncongMovies,2);
 
 cd Subjects_Data
 
