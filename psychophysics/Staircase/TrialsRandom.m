@@ -1,70 +1,85 @@
-function [Trials] = TrialsRandom (NoiseRange, NbTrialsPerCondition, McDir, MovieType, SoundType, Verbosity);
+function [Trials] = TrialsRandom (NoiseRange, NbTrialsPerCondition, McDir, ConDir, InconDir, MovieType, SoundType);
 
-% Randomise the trials for the "McGurk" experiment with blocks of stimuli
+% Randomise the trials for the "McGurk Audio Staircase" experiment
 %
 %
 % Returns a {4,1} cell
 % {1,1} contains the trial number and the type of stimuli presented on this trial
-% Trials(i,1) = [i NoiseLevel];
+% Trials(i,1) = [i q NoiseLevel];
 % i		 is the trial number
+% q		 is the condition 0 --> CON, 1 --> INC, 2 --> McGurk
 
 % {2,1} contains the name of the stim used
 % {3,1} contains the absolute path of the corresponding movie to be played
 % {4,1} contains the absolute path of the corresponding sound to be played
 
 
-% TO DO LIST :
-%   - what if they are no movie
 
-
+% -------------------------------------------------------------------------
 
 
 if (nargin < 1) || isempty(NoiseRange)==1
-    NoiseRange = linspace (0,1,10);
+    NoiseRange = linspace (0,0.8,10);
 end;
 
 if (nargin < 2) || isempty(NbTrialsPerCondition)==1 % 0 to hide some errors and some check-up
-	NbTrialsPerCondition = 8;
+	NbTrialsPerCondition = 1;
 end;
 
 if (nargin < 3) || isempty(McDir)==1
     McDir = 'McGurkMovies';
 end;
 
-if (nargin < 4) || isempty(MovieType)==1
+if (nargin < 4) || isempty(ConDir)==1
+    ConDir = 'CongMovies';
+end;
+
+if (nargin < 5) || isempty(InconDir)==1
+    InconDir = 'IncongMovies';
+end;
+
+if (nargin < 6) || isempty(MovieType)==1
     MovieType = '.mov';
 end;
 
-if (nargin < 5) || isempty(SoundType)==1
+if (nargin < 7) || isempty(SoundType)==1
     SoundType = '.wav';
 end;
 
-if (nargin < 6) || isempty(Verbosity)==1 % 0 to hide some errors and some check-up
-    Verbosity = 0; 
-end;
 
 	      
-% -----------------------------------------------
+% -------------------------------------------------------------------------
 
 % Initialise some variables or mat or cells
 Trials = cell(4,1);
-Trials{1,1}=[];
+Trials{1,1} = [];
 
-% -----------------------------------------------
-
+% -------------------------------------------------------------------------
 
 % Stimuli directories
+MoviesDir = cell(3,1);
+
 McMoviesDir = strcat(pwd, filesep, McDir, filesep);
+MoviesDir{3,1} = McMoviesDir;
+CongMoviesDir = strcat(pwd, filesep, ConDir, filesep);
+MoviesDir{1,1} = CongMoviesDir;
+IncongMoviesDir = strcat(pwd, filesep, InconDir, filesep);
+MoviesDir{2,1} = IncongMoviesDir;
 
 fprintf('\nLooking for movies in the directories:\n %s\n\n', McMoviesDir);
 
+% -------------------------------------------------------------------------
+
+A = cell(3,1);
+MoviesLists = cell(3,1);
+
 % List the McGurk movies and their absolute pathnames with the same method as above
 McMoviesDirList = dir(strcat(McMoviesDir, '*', MovieType));
+MoviesLists {3,1} = McMoviesDirList;
 if (isempty(McMoviesDirList))
     error('There are no McGurk movie.');
 end;
 NbMcMovies = size(McMoviesDirList, 1);
-MovieVector = 1:NbMcMovies;
 
 McSoundDirList = dir(strcat(McMoviesDir, '*', SoundType));
 NbMcSound =  size(McSoundDirList, 1);
@@ -72,36 +87,83 @@ if (NbMcSound~=NbMcMovies) % Check if there are actually as many movies as sound
     error('Different numbers of sound and movies in the McGurk folder.');
 end;
 
-
-fprintf('\nSome movies found.\n\nRandomizing Trials.\n');
-
 % Cartesian product... Solution found online. Seems also possible to use the ALLCOMB function if it has been downloaded from mathworks exchange.
-sets = {MovieVector, 1:length(NoiseRange)};
+sets = {1:NbMcMovies, 1:length(NoiseRange)};
 [x y] = ndgrid(sets{:});
 % List of all possible combinations and repeats the matrix by the amount of times per condition.
 Conditions = [x(:) y(:)];
 
-
 % Repeats the condition matrix as many times as necessary
-A = repmat(Conditions, NbTrialsPerCondition, 1);
+A {3,1} = repmat(Conditions, NbTrialsPerCondition, 1);
+
+% -------------------------------------------------------------------------
+
+% List the CONGRUENT movies and their absolute pathnames
+CongMoviesDirList = dir(strcat(CongMoviesDir,'*', MovieType)); % List the movie files in the congruent movie folder and returns a structure
+MoviesLists {1,1} = CongMoviesDirList;
+if (isempty(CongMoviesDirList)) % Check if there are actually movie !
+    error('There are no congruent movie.');
+end;
+NbCongMovies = size(CongMoviesDirList,1);
+
+CongSoundDirList = dir(strcat(CongMoviesDir,'*', SoundType));
+NbCongSound =  size(CongSoundDirList,1);
+if (NbCongSound~=NbCongMovies) % Check if there are actually as many movies as sounds !
+    error('Different numbers of sound and movies in the congruent folder.');
+end;
+
+sets = {1:NbCongMovies, 1:length(NoiseRange)};
+[x y] = ndgrid(sets{:});
+Conditions = [x(:) y(:)];
+
+A {1,1} = repmat(Conditions, NbTrialsPerCondition, 1);
+
+% -------------------------------------------------------------------------
+
+% List the INCONGRUENT movies and their absolute pathnames with the same method as above
+IncongMoviesDirList = dir(strcat(IncongMoviesDir,'*', MovieType));
+MoviesLists {2,1} = IncongMoviesDirList;
+if (isempty(IncongMoviesDirList))
+    error('There are no incongruent movie.');
+end;
+NbIncongMovies = size(IncongMoviesDirList,1);
+
+IncongSoundDirList = dir(strcat(IncongMoviesDir,'*', SoundType));
+NbIncongSound =  size(IncongSoundDirList,1);
+if (NbIncongSound~=NbIncongMovies)
+    error('Different numbers of sound and movies in the incongruent folder.');
+end;
+
+sets = {1:NbIncongMovies, 1:length(NoiseRange)};
+[x y] = ndgrid(sets{:});
+Conditions = [x(:) y(:)];
+
+A {2,1} = repmat(Conditions, NbTrialsPerCondition, 1);
+
+% -------------------------------------------------------------------------
 
 
 % Generate a randomly ordered vector for the trial orders.
-TrialsIndices = randperm (length(A));
-
+TrialsIndices = [ randperm(length(A{1,1}))' randperm(length(A{2,1}))' randperm(length(A{3,1}))' ];
+TrialCounter = ones (1,3);
 
 % ----- Randomise trials -----
 
-for i = 1:length(A) ;
+for i = 1:(length(A{1,1})+length(A{2,1})+length(A{3,1})) ;
+
+	q = floor(rand*3); % Chooses a condition
+	while TrialCounter(1,q+1) > length(A{q+1,1}) % Checks that we have not already played all the movies of this condition
+		q = floor(rand*3); 
+	end	 	
 		
-	Stim = McMoviesDirList(A(TrialsIndices(i),1)).name;
+	Stim = MoviesLists{q+1,1} ( A{q+1,1} (TrialsIndices(TrialCounter(1,q+1), q+1),1) ).name;
 	
-	Mov = [McMoviesDir Stim];
+	Mov = [MoviesDir{q+1,1} Stim];
 
 	Sound = strcat(Mov(1:end-4), SoundType); % Notes the name of the sound file corresponding to the movie
 	
        
-	Trials{1,1} = [Trials{1,1} ; i A(TrialsIndices(i),2)]; % Notes the trial number and the Noiselevel used for this trial
+	Trials{1,1} = [Trials{1,1} ; i q A{q+1,1}(TrialsIndices(TrialCounter(1,q+1), q+1),2)]; % Notes the trial number and the Noiselevel used for this trial
 	
 	if (i==1) % Otherwise the first line of the Trials{2,1} and {3,1} matrixes will be empty rows
 	    	Trials{2,1} = char(Stim(1:end-4)); % Thus creates a first row to the stim matrix
@@ -112,13 +174,15 @@ for i = 1:length(A) ;
             	Trials{3,1} = char(Trials{3,1},Mov); % Appends the stimulus absolute path to the movie stim absolute matrix
             	Trials{4,1} = char(Trials{4,1},Sound); % Appends the stimulus absolute path to the sound stim absolute matrix
     	end;
+    	
+    	TrialCounter(1,q+1) = TrialCounter(1,q+1) + 1;
 	
 end;
 
 fprintf('\nRandomization Done.\n\n');
 
 
-fprintf('\nThis run should last between %.0f and %.0f min.\n\n', floor(2*length(A)/60), ceil(5*(length(A))/60) );
+fprintf('\nThis run should last between %.0f and %.0f min.\n\n', floor( 2 * length(Trials{1,1}(:,1)) / 60 ), ceil( 3.5 * length(Trials{1,1}(:,1)) / 60) );
 
 fprintf('Do you want to continue?\n')
 Confirm=input('Type ok to continue. ', 's');

@@ -87,7 +87,7 @@ end
 % This row is for incongruent blocks
 % This row is for McGurk blocks
 BlockLenght= [1:4; 1:4; 1:4];
-BlockRepet = 16; % Must be equal to NbMcMovie^2 !
+BlockRepet = 16 * 3 ; % Must be equal to NbMcMovie^2 !
 
 Scale = 2; % Movie scale relative to original one
 
@@ -105,7 +105,7 @@ SamplingFreq = 44100;
 NbChannels = 2;
 LatBias = 0;
 
-NoiseRange = [0.9 0.1 0.15 0.7 0.1 0.2]; % Adds some whitenoise to the sound track : 0 -> no noise; 1 -> noise level equivqlent to the max intensity present in the orginql soundtrack
+NoiseRange = [0.9 0.1 0.15 0.7]; % Adds some whitenoise to the sound track : 0 -> no noise; 1 -> noise level equivqlent to the max intensity present in the orginql soundtrack
 
 
 % --------------------------%
@@ -117,7 +117,7 @@ deviceIndex = input('Choose keyboard ')
 
 esc = KbName('ESCAPE');
 
-ResponseTimeWindow = 1;
+ResponseTimeWindow = 1.5;
 
 
 % -------------------------------------------------------------------------
@@ -481,7 +481,7 @@ end;
 for i=1:NbTrials
 	switch KbName( Trials{1,1}(i,7) ) % Check responses given
 		case RespB
-			if Trials{1,1}(i,3) == 0 && Trials{2,1}(i,1)=='B' % That is a congruent trial
+			if Trials{1,1}(i,3) == 0 && Trials{2,1}(i,8)=='B' % That is a congruent trial
 				Trials{1,1}(i,8) = 1;
 			elseif (Trials{1,1}(i,3) == 1 || Trials{1,1}(i,3) == 2) && Trials{2,1}(i,8)=='B' % That is an incongruent or a mcgurk trial
 				Trials{1,1}(i,8) = 1;
@@ -490,7 +490,7 @@ for i=1:NbTrials
 			end;
 			
 		case RespD
-			if Trials{1,1}(i,3) == 0 && Trials{2,1}(i,1)=='D'
+			if Trials{1,1}(i,3) == 0 && Trials{2,1}(i,8)=='D'
 				Trials{1,1}(i,8) = 1;
 			elseif (Trials{1,1}(i,3) == 1 || Trials{1,1}(i,3) == 2) && Trials{2,1}(i,8)=='D'
 				Trials{1,1}(i,8) = 1;
@@ -499,7 +499,7 @@ for i=1:NbTrials
 			end;
 			
 		case RespP
-			if Trials{1,1}(i,3) == 0 && Trials{2,1}(i,1)=='P'
+			if Trials{1,1}(i,3) == 0 && Trials{2,1}(i,8)=='P'
 				Trials{1,1}(i,8) = 1;
 			elseif (Trials{1,1}(i,3) == 1 || Trials{1,1}(i,3) == 2) && Trials{2,1}(i,8)=='P'
 				Trials{1,1}(i,8) = 1;
@@ -508,7 +508,7 @@ for i=1:NbTrials
 			end;
 			
 		case RespT
-			if Trials{1,1}(i,3) == 0 && Trials{2,1}(i,1)=='T'
+			if Trials{1,1}(i,3) == 0 && Trials{2,1}(i,8)=='T'
 				Trials{1,1}(i,8) = 1;
 			elseif (Trials{1,1}(i,3) == 1 || Trials{1,1}(i,3) == 2) && Trials{2,1}(i,8)=='T'
 				Trials{1,1}(i,8) = 1;

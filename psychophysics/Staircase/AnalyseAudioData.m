@@ -1,24 +1,20 @@
-function AnalyseVisualData
+function AnalyseAudioDataV2
 
 %
 
 % Trials{1,1}(i,:) = [j NoiseSoundLevel RT Resp RespCat];
 % j			- is the trial number.
+% q			- is the trial condition
 % NoiseSoundLevel	- Noise level for this trial
 % RT
 % Resp
 % RespCat	 2 --> McGurk effect did not worked; 3 --> Mc Gurk effect worked; 4 --> something else answered
 
 
-% TO DO :
-%	- Test on matlab and on other station
-%	- take into account answers Other
-
 
 clc
 clear all
 close all
-
 
 
 
@@ -54,19 +50,38 @@ lapseLimits = [0 1];        %limit range for lambda
 % Figure counter
 n=1;
 
+
 MovieType = '.mov';
+
+
 McDir = 'McGurkMovies';
+ConDir = 'CongMovies';
+InconDir = 'IncongMovies';
+
 
 McMoviesDir = strcat(pwd, filesep, McDir, filesep);
 McMoviesDirList = dir(strcat(McMoviesDir,'*', MovieType));
 NbMcMovies = size(McMoviesDirList,1);
 
-StimByStimRespRecap=cell(NbMcMovies,2);
+CongMoviesDir = strcat(pwd, filesep, ConDir, filesep);
+CongMoviesDirList = dir(strcat(CongMoviesDir,'*', MovieType)); % List the movie files in the congruent movie folder and returns a structure
+NbCongMovies = size(CongMoviesDirList,1);
+
+IncongMoviesDir = strcat(pwd, filesep, InconDir, filesep);
+IncongMoviesDirList = dir(strcat(IncongMoviesDir,'*', MovieType));
+NbIncongMovies = size(IncongMoviesDirList,1);
 
 
-McMoviesDirList.name
+StimByStimRespRecap = cell(NbMcMovies,2,3);
+
+
+McMoviesDirList.name;
+CongMoviesDirList.name;
+IncongMoviesDirList.name;
+
 
 cd Subjects_Data
+
 
 try
 
@@ -81,39 +96,49 @@ for i=1:SizeList
 	TotalTrials{2,1}=[TotalTrials{2,1};Trials{2,1}];
 end;
 
+
+
 StimLevels = NoiseSoundRange;
 StimLevelsFineGrain=[min(StimLevels):max(StimLevels)./1000:max(StimLevels)];
+
 
 NbTrials = length(TotalTrials{1,1}(:,1));
 
 SavedMat = strcat('Results_', SubjID, '.mat');
 
-RespRecap = [ NoiseSoundRange; zeros(3, length(NoiseSoundRange)) ];
+RespRecap = repmat([ NoiseSoundRange; zeros(3, length(NoiseSoundRange)) ], [1 1 3]);
 
 
 for i=1:NbMcMovies
-    StimByStimRespRecap{i,2} = McMoviesDirList(i).name(1:end-4);
-    StimByStimRespRecap{i,1} = [ NoiseSoundRange; zeros(3, length(NoiseSoundRange)) ];
-    
-    RespTypeRecap{1,1}(i,:) = McMoviesDirList(i).name(1:end-4);
-    RespTypeRecap{1,2}(i,:) = zeros(1,5);
+	
+	StimByStimRespRecap{i,2,1} = CongMoviesDirList(i).name(1:end-4);
+	RespTypeRecap{1,1,1}(i,:) = CongMoviesDirList(i).name(1:end-4);
+	
+	StimByStimRespRecap{i,2,2} = IncongMoviesDirList(i).name(1:end-4);
+	RespTypeRecap{1,1,2}(i,:) = IncongMoviesDirList(i).name(1:end-4);
+
+	StimByStimRespRecap{i,2,3} = McMoviesDirList(i).name(1:end-4);
+	RespTypeRecap{1,1,3}(i,:) = McMoviesDirList(i).name(1:end-4);
+	
+	for j=1:3
+		StimByStimRespRecap{i,1,j} = [ NoiseSoundRange; zeros(3, length(NoiseSoundRange)) ];
+		RespTypeRecap{1,2,j}(i,:) = zeros(1,5);
+	end
+	
 end
 
 
-
 for i=1:NbTrials
-    
+	
 	for j=1:NbMcMovies
-		if TotalTrials{2,1}(i,:)==StimByStimRespRecap{j,2}
-		StimByStimRespRecap{j,1}(TotalTrials{1,1}(i,5) , TotalTrials{1,1}(i,2)) = StimByStimRespRecap{j,1}(TotalTrials{1,1}(i,5) , TotalTrials{1,1}(i,2)) + 1;
+		if TotalTrials{2,1}(i,:)==StimByStimRespRecap{j,2,TotalTrials{1,1}(i,2)+1}		
+			StimByStimRespRecap{j,1,TotalTrials{1,1}(i,2)+1}(TotalTrials{1,1}(i,6) , TotalTrials{1,1}(i,3)) = StimByStimRespRecap{j,1,TotalTrials{1,1}(i,2)+1}(TotalTrials{1,1}(i,6) , TotalTrials{1,1}(i,3)) + 1;
 		end
 	end
 
-	
-	RespRecap(TotalTrials{1,1}(i,5) ,TotalTrials{1,1}(i,2)) = RespRecap(TotalTrials{1,1}(i,5) ,TotalTrials{1,1}(i,2)) + 1;
-    
-    
-	switch KbName( TotalTrials{1,1}(i,4) ) % Check responses given
+	RespRecap(TotalTrials{1,1}(i,6) ,TotalTrials{1,1}(i,3), TotalTrials{1,1}(i,2)+1) = RespRecap(TotalTrials{1,1}(i,6) ,TotalTrials{1,1}(i,3), TotalTrials{1,1}(i,2)+1) + 1;
+
+	switch KbName( TotalTrials{1,1}(i,5) ) % Check responses given
 		case RespB
 		B = 1;
 
@@ -129,73 +154,184 @@ for i=1:NbTrials
 		otherwise
 		B = 5;
 	end
-	
+
 	% Find what stimulus was played
-	A = find( strcmp (cellstr( repmat(TotalTrials{2,1}(i,:), NbMcMovies, 1) ), RespTypeRecap{1,1}) );
-    
-	RespTypeRecap{1,2}(A,B) = RespTypeRecap{1,2}(A,B) + 1;
-    
+	A = find( strcmp (cellstr( repmat(TotalTrials{2,1}(i,:), NbMcMovies, 1) ), RespTypeRecap{1,1,TotalTrials{1,1}(i,2)+1}) );
+
+	RespTypeRecap{1,2,TotalTrials{1,1}(i,2)+1}(A,B) = RespTypeRecap{1,2,TotalTrials{1,1}(i,2)+1}(A,B) + 1;
 end;
 
-RespRecap
 
 
-for i=1:NbMcMovies
-    StimByStimRespRecap{i,:}
+% Display results
+
+RespRecap(:,:,2)
+RespRecap(:,:,3)
+
+for i=1:NbIncongMovies
+    StimByStimRespRecap{i,:,2}
 end
 
-RespTypeRecap{1,1}
-RespTypeRecap{1,2}
+for i=1:NbMcMovies
+    StimByStimRespRecap{i,:,3}
+end
+
+RespTypeRecap{1,1,2}
+RespTypeRecap{1,2,2}
+
+RespTypeRecap{1,1,3}
+RespTypeRecap{1,2,3}
 
 
+
+% Percent of response correct or McGurk response depending on intensity of
+% white noise
 figure(n)
 n = n+1;
 
-title ('Stimuli by Stimuli')
+subplot(131)
+title ('McGurk')
+hold on
+plot(RespRecap(1,:,3), [RespRecap(3,:,3)./sum(RespRecap(2:3,:,3))], 'k.', 'markersize', 30) 
+plot(RespRecap(1,:,3), [RespRecap(4,:,3)./sum(RespRecap(2:4,:,3))], 'r') 
+
+[paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, RespRecap(3,:,3), sum(RespRecap(2:3,:,3)), ...
+	searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
+ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
+
+plot(StimLevelsFineGrain, ProportionCorrectModel,'g-','linewidth',3);
+set(gca,'ylim', [0 1])
+
+subplot(132)
+title ('Incongruent')
+hold on
+plot(RespRecap(1,:,2), [RespRecap(3,:,2)./sum(RespRecap(2:3,:,2))], 'k.', 'markersize', 30)
+
+[paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, RespRecap(3,:,2), sum(RespRecap(2:3,:,2)), ...
+	searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
+ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
+
+plot(StimLevelsFineGrain, ProportionCorrectModel,'g-','linewidth',3);
+set(gca,'ylim', [0 1])
+
+subplot(133)
+title ('Congruent')
+hold on
+plot(RespRecap(1,:,1), [RespRecap(3,:,1)./sum(RespRecap(2:3,:,1))], 'k.', 'markersize', 30)
+
+[paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, RespRecap(3,:,1), sum(RespRecap(2:3,:,1)), ...
+	searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
+ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
+
+plot(StimLevelsFineGrain, ProportionCorrectModel,'g-','linewidth',3);
+set(gca,'ylim', [0 1])
+
+
+% Percent of response correct or McGurk response depending on intensity of white noise
+figure(n)
+n = n+1;
 
 color = ['r' 'g' 'b' 'c' 'y' 'm'];
 
+title ('McGurk')
 LegendContent = [];
-
 hold on
-
 for i=1:NbMcMovies
-	plot(StimByStimRespRecap{i,1}(1,:), [StimByStimRespRecap{i,1}(3,:)./sum(StimByStimRespRecap{i,1}(2:3,:))], '.--', 'Color', color(i),'MarkerEdgeColor', color(i), 'markersize', 20)
+	plot(StimByStimRespRecap{i,1,3}(1,:), [StimByStimRespRecap{i,1,3}(3,:)./sum(StimByStimRespRecap{i,1,3}(2:3,:))], '.--', 'Color', color(i),'MarkerEdgeColor', color(i), 'markersize', 20)
+	
+	[paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, StimByStimRespRecap{i,1,3}(3,:), sum(StimByStimRespRecap{i,1,3}(2:3,:)), ...
+		searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
+	ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
 
-    	[paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, StimByStimRespRecap{i,1,3}(3,:), sum(StimByStimRespRecap{i,1,3}(2:3,:)), ...
+	plot(StimLevelsFineGrain, ProportionCorrectModel, color(i), 'linewidth',2);
+	
+	LegendContent = [LegendContent ; StimByStimRespRecap{i,2,3} ; blanks(length(StimByStimRespRecap{i,2,3})) ];
+end
+legend (LegendContent, 'Location', 'SouthEast')
+set(gca,'ylim', [0 1])
+
+% Percent of response correct or INC response depending on intensity of white noise
+figure(n)
+n = n+1;
+
+title ('Incongruent')
+LegendContent = [];
+hold on
+for i=1:NbIncongMovies
+	plot(StimByStimRespRecap{i,1,2}(1,:), [StimByStimRespRecap{i,1,2}(3,:)./sum(StimByStimRespRecap{i,1,2}(2:3,:))], '.--', 'Color', color(i), 'MarkerEdgeColor', color(i), 'markersize', 20)
+
+	[paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, StimByStimRespRecap{i,1,2}(3,:), sum(StimByStimRespRecap{i,1,2}(2:3,:)), ...
+		searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
+	ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
+
+	plot(StimLevelsFineGrain, ProportionCorrectModel, color(i), 'linewidth',2);
+	
+	LegendContent = [LegendContent ; StimByStimRespRecap{i,2,2} ; blanks(length(StimByStimRespRecap{i,2,2})) ];
+end
+legend (LegendContent, 'Location', 'SouthEast')
+set(gca,'ylim', [0 1])
+
+% Percent of response correct or CON response depending on intensity of white noise
+figure(n)
+n = n+1;
+
+title ('Congruent')
+LegendContent = [];
+hold on
+for i=1:NbCongMovies
+	plot(StimByStimRespRecap{i,1,1}(1,:), [StimByStimRespRecap{i,1,1}(3,:)./sum(StimByStimRespRecap{i,1,1}(2:3,:))], '.--', 'Color', color(i), 'MarkerEdgeColor', color(i), 'markersize', 20)
+
+	[paramsValues LL exitflag output] = PAL_PFML_Fit(StimLevels, StimByStimRespRecap{i,1,1}(3,:), sum(StimByStimRespRecap{i,1,1}(2:3,:)), ...
 		searchGrid, paramsFree, PF, 'searchOptions', options, 'lapseLimits',lapseLimits);
 	ProportionCorrectModel = PF(paramsValues, StimLevelsFineGrain);
 
 	plot(StimLevelsFineGrain, ProportionCorrectModel, color(i), 'linewidth',2);
 
-	LegendContent = [LegendContent ; StimByStimRespRecap{i,2} ; blanks(length(StimByStimRespRecap{i,2})) ];
+	LegendContent = [LegendContent ; StimByStimRespRecap{i,2,1} ; blanks(length(StimByStimRespRecap{i,2,1}))];
 end
 legend (LegendContent, 'Location', 'SouthEast')
 set(gca,'ylim', [0 1])
 
 
-
+% Type of response depending on stimuli
 figure(n)
 n = n+1;
 
-subplot(111)
+subplot(131)
+title ('McGurk')
 for i=1:NbMcMovies
-    C(i,:) = RespTypeRecap{1,2}(i,:)./sum(RespTypeRecap{1,2}(i,:));    
+    C(i,:) = RespTypeRecap{1,2,3}(i,:)./sum(RespTypeRecap{1,2,3}(i,:));
 end
 barh(C, 'stacked')
 legend(['b'; 'd'; 'p'; 't'; ' '])
-t=title ('Responses to McGurk stim after congruent block');
+t=title ('Responses to McGurk stim');
 set(t,'fontsize',15);
-set(gca,'tickdir', 'out', 'ytick', 1:14 ,'yticklabel', RespTypeRecap{1,1}, 'ticklength', [0.005 0], 'fontsize',13)
+set(gca,'tickdir', 'out', 'ytick', 1:14 ,'yticklabel', RespTypeRecap{1,1,3}, 'ticklength', [0.005 0], 'fontsize',13)
 axis 'tight'
 
+subplot(132)
+title ('Incongruent')
+for i=1:NbIncongMovies
+    C(i,:) = RespTypeRecap{1,2,2}(i,:)./sum(RespTypeRecap{1,2,2}(i,:));
+end
+barh(C, 'stacked')
+legend(['b'; 'd'; 'p'; 't'; ' '])
+t=title ('Responses to INC stim');
+set(t,'fontsize',15);
+set(gca,'tickdir', 'out', 'ytick', 1:14 ,'yticklabel', RespTypeRecap{1,1,2}, 'ticklength', [0.005 0], 'fontsize',13)
+axis 'tight'
 
-% Saving the data
-if (IsOctave==0)
-    save (SavedMat);
-else
-    save ('-mat7-binary', SavedMat);
-end;
+subplot(133)
+title ('Congruent')
+for i=1:NbCongMovies
+    C(i,:) = RespTypeRecap{1,2,1}(i,:)./sum(RespTypeRecap{1,2,1}(i,:));
+end
+barh(C, 'stacked')
+legend(['b'; 'd'; 'p'; 't'; ' '])
+t=title ('Responses to CON stim');
+set(t,'fontsize',15);
+set(gca,'tickdir', 'out', 'ytick', 1:14 ,'yticklabel', RespTypeRecap{1,1,1}, 'ticklength', [0.005 0], 'fontsize',13)
+axis 'tight'
 
 
 
@@ -241,7 +377,19 @@ else
     	end;
 end;
 
+
+
 cd ..
+
+
+% Saving the data
+if (IsOctave==0)
+    save (SavedMat);
+else
+    save ('-mat7-binary', SavedMat);
+end;
+
+
 
 catch
 cd ..

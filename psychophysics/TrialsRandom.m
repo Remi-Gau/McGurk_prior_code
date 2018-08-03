@@ -18,8 +18,6 @@ function TrialsRandom (SubjID, NoiseRange, BlockRepet, BlockLenght, ConDir, Inco
 % {5,1} contains the absolute path of the corresponding sound to be played
 
 
-% TO DO LIST :
-
 
 
 % -------------------------------- %
@@ -31,11 +29,11 @@ if (nargin < 1) || isempty(SubjID)==1
 end;
 
 if (nargin < 2) || isempty(NoiseRange)==1
-    NoiseRange = [0 0.1 0.2 0.3 0.4 0.5];
+    NoiseRange = [0 0.1 0.2 0.3];
 end;
 
 if (nargin < 3) || isempty(BlockRepet)==1
-    BlockRepet = 16; % Must be equal to NbMcMovie^2 !
+    BlockRepet = 16 * 3; % Must be equal to NbMcMovie^2 !
 end;
 
 if (nargin < 4) || isempty(BlockLenght)==1 % Matrix to describe the possible length of the blocks according to condition. Same for all conditions to ensure a balanced design.
@@ -72,7 +70,7 @@ end;
 %      Global Variables     %
 % --------------------------%
 
-rMAX = 6; % Maximum number of run
+rMAX = 4; % Maximum number of run
 
 SavedRunMat = strcat('Subject_', SubjID, '_Run_Matrices.mat');
 
@@ -191,7 +189,7 @@ end;
 sets = {1:NbCongMovies, 1:length(NoiseRange)};
 [x y] = ndgrid(sets{:});
 % List of all possible combinations and repeats the matrix by the amount of times per condition.
-MovieOrder{1,1} = repmat([x(:) y(:)], sum(BlockLenght(1,:)), 1 );
+MovieOrder{1,1} = repmat([x(:) y(:)], 3 * sum(BlockLenght(1,:)), 1 );
 
 % -------------------------------------------------------------------------
 
@@ -210,7 +208,7 @@ end;
 
 sets = {1:NbIncongMovies, 1:length(NoiseRange)};
 [x y] = ndgrid(sets{:});
-MovieOrder{2,1} = repmat([x(:) y(:)], sum(BlockLenght(2,:)), 1 );
+MovieOrder{2,1} = repmat([x(:) y(:)], 3 * sum(BlockLenght(2,:)), 1 );
 
 % -------------------------------------------------------------------------
 
@@ -227,16 +225,15 @@ if (NbMcSound~=NbMcMovies)
     error('Different numbers of sound and movies in the incongruent folder.');
 end;
 
-MovieOrder{3,1} = repmat([1:NbMcMovies]', NbMcMovies*sum(BlockLenght(3,:)), 1);
+MovieOrder{3,1} = repmat([1:NbMcMovies]', 3 * NbMcMovies*sum(BlockLenght(3,:)), 1);
 
 % -------------------------------------------------------------------------
 
 
 % Creates randomised indices vector for the different conditions
-MovieOrderIndices = [ [randperm(length(MovieOrder{1,1}(:,1)))]' [randperm(length(MovieOrder{2,1}(:,1)))]' [randperm(length(MovieOrder{3,1}(:,1)))]' ];
+MovieOrderIndices = [ [randperm( length(MovieOrder{1,1}(:,1)) )]' [randperm( length(MovieOrder{2,1}(:,1)) )]' [randperm( length(MovieOrder{3,1}(:,1)) )]' ];
 % Creates indices counters for the different conditions
 MovieIndex=ones(1,3);
-
 
 fprintf('\nSome movies found.\n\nRandomizing Trials.\n');
 
@@ -320,7 +317,7 @@ end
 
 fprintf('\nRandomization Done.\n\n');
 
-
+MovieIndex
 
 
 % Saving the run matrix

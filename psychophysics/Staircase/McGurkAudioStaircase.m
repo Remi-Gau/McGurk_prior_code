@@ -3,9 +3,8 @@ function McGurkAudioStaircase (Verbosity);
 %
 
 % TO DO LISTS :
-%	- analyse responses to stim : simplify
-%	- do back up regularly in case of crash and make a fixcrash
-%	- randomise trials like for the visual version
+%	- analyse responses to stim : allow to sort responses with other in
+%	another category...
 
 
 
@@ -77,13 +76,16 @@ end;
 
 Scale = 2; % Movie scale relative to original one
 
-NbTrialsPerCondition = 5 ;
+NbTrialsPerCondition = 3;
 
 % Stimuli file types
 MovieType = '.mov';
 SoundType = '.wav';
 
 McDir = 'McGurkMovies';
+ConDir = 'CongMovies';
+InconDir = 'IncongMovies';
+
 
 % Sound
 SamplingFreq = 44100;
@@ -103,13 +105,13 @@ deviceIndex = input('Choose keyboard ')
 
 esc = KbName('ESCAPE');
 
-ResponseTimeWindow = 1;
+ResponseTimeWindow = 1.5;
 
 
 % -------------------------------------------------------------------------
 
 
-[Trials] = TrialsRandom (NoiseSoundRange, NbTrialsPerCondition, McDir, MovieType, SoundType, Verbosity);
+[Trials] = TrialsRandom (NoiseSoundRange, NbTrialsPerCondition, McDir, ConDir, InconDir, MovieType, SoundType);
 % Returns a {4,1} cell
 % {1,1} contains the trial number and the type of stimuli presented on this trial
 % Trials(i,1) = [i NoiseLevelIndex];
@@ -253,7 +255,7 @@ for j=1:NbTrials
 	clear Y;
     
     
-    	NoiseSoundLevel = NoiseSoundRange(Trials{1,1}(j,2));
+    	NoiseSoundLevel = NoiseSoundRange(Trials{1,1}(j,3));
    	A = NoiseSoundLevel * ( 2 * max(max(Z)) * rand(1, length(Z)) - max(max(Z)) );
    	A = [A ; A];
    	Z = A + Z;
@@ -381,7 +383,7 @@ for j=1:NbTrials
     	 
 
 	% APPENDS RESULTS to the Trials{1,1} matrix and to Trials{2,1}
-	Trials{1,1}(j, 3:4) = [RT Resp];
+	Trials{1,1}(j, 4:5) = [RT Resp];
 	Trials{5,1}(j,:) = [j MovieLag DroppedFrames T_VisualOnset T_AudioOnset AV_Offset];
 
 
@@ -431,32 +433,61 @@ end;
 %     Sorting   Answers     %
 % --------------------------%
 for i=1:NbTrials
-	switch Trials{2,1}(i,8)
+	switch Trials{1,1}(i,2)
+		case 2 % if a McGurk Trial
+			switch Trials{2,1}(i,8)
+				case 'B'
+					switch KbName( Trials{1,1}(i,5) ) % Check responses given
+						case RespB
+						Trials{1,1}(i,6) = 2; % McGurk did not work
+						case RespD
+						Trials{1,1}(i,6) = 3; % McGurk worked
+						otherwise
+						Trials{1,1}(i,6) = 4;
+					end
 
-		case 'B'
-			switch KbName( Trials{1,1}(i,4) ) % Check responses given
-				case RespB
-				Trials{1,1}(i,5) = 2;
-			
-				case RespD
-				Trials{1,1}(i,5) = 3;
-				
-				otherwise
-				Trials{1,1}(i,5) = 4;
+				case 'P'
+					switch KbName( Trials{1,1}(i,5) ) % Check responses given
+						case RespP
+						Trials{1,1}(i,6) = 2;
+						case RespT
+						Trials{1,1}(i,6) = 3;
+						otherwise
+						Trials{1,1}(i,6) = 4;
+					end
 			end
+		
+		otherwise
+			switch Trials{2,1}(i,8)
+				case 'B'
+					if Trials{1,1}(i,5) == KbName(RespB) % Check responses given
+						Trials{1,1}(i,6) = 2;
+					else
+						Trials{1,1}(i,6) = 3;
+					end
 
-		case 'P'
-			switch KbName( Trials{1,1}(i,4) ) % Check responses given
-				case RespP
-				Trials{1,1}(i,5) = 2;
-			
-				case RespT
-				Trials{1,1}(i,5) = 3;
-				
-				otherwise
-				Trials{1,1}(i,5) = 4;
+				case 'D'
+					if Trials{1,1}(i,5) == KbName(RespD) % Check responses given
+						Trials{1,1}(i,6) = 2;
+					else
+						Trials{1,1}(i,6) = 3;
+					end
+				case 'P'
+					if Trials{1,1}(i,5) == KbName(RespP) % Check responses given
+						Trials{1,1}(i,6) = 2;
+					else
+						Trials{1,1}(i,6) = 3;
+					end
+				case 'T'
+					if Trials{1,1}(i,5) == KbName(RespT) % Check responses given
+						Trials{1,1}(i,6) = 2;
+					else
+						Trials{1,1}(i,6) = 3;
+					end
 			end
-		end
+			
+
+	end
 end;
 
 
