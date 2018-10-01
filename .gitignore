@@ -3,3 +3,10 @@
 *.gz
 *.mov
 *.wav
+*.img
+*.hdr
+*.nii
+*.pdf
+*.eps
+*.ps
+*.png
