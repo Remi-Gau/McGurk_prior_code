@@ -19,6 +19,7 @@ AcquisitionOrder = 1:1:NbSlices;
 % Smoothing Parameters
 FWHM = 8;
 
+return
 
 % Subject's Identity and Session number
 SubjID = input('Subject''s ID? ','s');
