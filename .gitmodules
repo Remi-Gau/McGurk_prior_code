@@ -1,6 +1,6 @@
-[submodule "MRI_analysis/pre_process_bids/toolboxes/spmup"]
-	path = MRI_analysis/pre_process_bids/toolboxes/spmup
-	url = https://github.com/Remi-Gau/spmup.git
-[submodule "MRI_analysis/pre_process_bids/toolboxes/GLMdenoise"]
-	path = MRI_analysis/pre_process_bids/toolboxes/GLMdenoise
+[submodule "fMRI_analysis/pre_process_bids/toolboxes/GLMdenoise"]
+	path = fMRI_analysis/pre_process_bids/toolboxes/GLMdenoise
 	url = https://github.com/kendrickkay/GLMdenoise.git
+[submodule "fMRI_analysis/pre_process_bids/toolboxes/spmup"]
+	path = fMRI_analysis/pre_process_bids/toolboxes/spmup
+	url = https://github.com/Remi-Gau/spmup.git
