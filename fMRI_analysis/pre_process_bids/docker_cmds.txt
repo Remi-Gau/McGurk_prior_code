@@ -1,24 +1,21 @@
 --entrypoint /bin/sh
 
 docker run -it --rm \
--v /c/Users/Remi/Documents/McGurk/:/data: \
--v /c/Users/Remi/Documents/McGurk/code/:/code \
+-v /c/Users/Remi/Documents/McGurk/:/data:ro \
+-v /c/Users/Remi/Documents/McGurk/code/fMRI_analysis/pre_process_bids/:/code \
 -v /c/Users/Remi/Documents/McGurk/derivatives/:/output \
-spmcentral/spm:octave-latest script '/code/run_analysis.m'
+octave_spm_maumet:0.0.1 script '/code/run_analysis.m'
 
+
+spmcentral/spm:octave-latest script '/code/run_analysis.m'
+spmcentral/spm:octave-latest eval "help spm_file_split"
 spmcentral/spm:octave-latest eval "spm_BIDS('/data/rawdata')"
 
+octave_spm_maumet:0.0.1
 
 
 docker run -it --rm \
--v /c/Users/Remi/Documents/BIDS/ds001/:/data: \
--v /c/Users/Remi/Documents/BIDS/code/:/code \
-spmcentral/spm:octave-latest eval "spm_BIDS('/data/')"
-
-docker run -it --rm \
--v /c/Users/Remi/Documents/BIDS/ds001/:/data: \
--v /c/Users/Remi/Documents/BIDS/code/:/code \
-spmcentral/spm:octave-latest script '/code/run_analysis.m'
-
-eval "spm_BIDS('/data/rawdata')"
-script /code/run_analysis.m
+-v /c/Users/Remi/Documents/McGurk/:/data:ro \
+-v /c/Users/Remi/Documents/McGurk/code/fMRI_analysis/pre_process_bids/:/code \
+-v /c/Users/Remi/Documents/McGurk/derivatives/:/output \
+spmcentral/spm:latest script '/code/run_analysis.m'
