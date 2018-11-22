@@ -43,13 +43,14 @@ for i = 1:nscans
     end;
 end
 temp = art_nanstd(allvols);
+size(temp)
 STDvol(:,:,:) = temp(1,:,:,:);
 clear allvols;
 
 
 
 
-function [fff_std] = art_nanstd(data);
+function [fff_std] = art_nanstd(data)
 %
 %   [f_std] = nanstd(data);
 %
@@ -60,7 +61,7 @@ function [fff_std] = art_nanstd(data);
 
 for index = 1:n;
     not_nans = find(isnan(data(:,index)) == 0);
-        if length(not_nans) > 0;
+        if length(not_nans) > 0
             f_std(index) = std(data(not_nans,index));
         else
             f_std(index) = NaN;
