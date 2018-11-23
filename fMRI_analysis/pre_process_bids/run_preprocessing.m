@@ -1,35 +1,46 @@
-% unpacks
+% preprocess the McGurk data with different pipelines
+% slice timing with reference slice 1 or 21 (original study was 21 ?)
+% despiking ON or OFF (original study was ON)
+% normalization at 2 or 3 mm (original study was 2)
 
-%% Set options, matlab path and get data
 clear
 clc
 
-data_dir = 'C:\Users\Remi\Documents\McGurk';
-% data_dir = '/data';
-
-output_dir = 'C:\Users\Remi\Documents\McGurk\derivatives';
-% output_dir = '/output';
-
+%% Set options, matlab path
 nb_dummy_scans = 5;
 max_nb_vols = 325;
-
 
 task = 'contextmcgurk';
 
 FWHM = 8;
 
-% Slice repair
+% slice repair (for Art repair)
 repair_flag = 1;
 OUTSLICEdef = 18;
 mask_flag = 1;
+
+% despiking option (for Art repair)
+FiltType = 3;
+Despike = 4;
+
+
+data_dir = 'C:\Users\Remi\Documents\McGurk';
+% data_dir = '/data';
+
+% data set
+BIDS_dir = fullfile(data_dir, 'rawdata');
+
+output_dir = 'C:\Users\Remi\Documents\McGurk\derivatives';
+% output_dir = '/output';
+
+
 
 % add spm12 and spmup to path
 addpath(genpath(fullfile(pwd, 'toolboxes', 'spmup')));
 addpath(genpath(fullfile(pwd, 'toolboxes', 'ArtRepair')));
 addpath(fullfile(pwd, 'subfun'));
 
-% data set
-BIDS_dir = fullfile(data_dir, 'rawdata');
+
 
 %% copy file to derivative folder and unpack data
 % set options
@@ -42,25 +53,11 @@ cd(choices.outdir)
 
 [BIDS, subjects, options] = spmup_BIDS_unpack(BIDS_dir, choices);
 
-subjs_ls = spm_BIDS(BIDS, 'subjects');
-nb_subj = numel(subjs_ls);
-spm_BIDS(BIDS, 'tasks');
+nb_subj = numel(spm_BIDS(BIDS, 'subjects'));
 
-hdr = spm_vol(subjects{1}.func{1, 1});
-opt.epi_res = diag(hdr(1).mat);
-opt.epi_res(end) = [];
-opt.epi_res = abs(min(opt.epi_res));
-res = [2 -3];
-opt.nb_slices = hdr(1).dim(3);
-
-metadata = spm_BIDS(BIDS, 'metadata', 'sub', subjs_ls{1}, 'type', 'bold', ...
-    'task', task, 'run', '01');
-
-opt.nb_slices = numel(metadata.SliceTiming);
-opt.TR = metadata.RepetitionTime*1000;
-opt.TA = opt.TR - (opt.TR/opt.nb_slices);
-opt.acquisition_order = metadata.SliceTiming*1000;
-slice_reference = [1 floor(opt.nb_slices/2)];
+% get aadditional data from metadata (TR, resolution, slice timing
+% parameters)
+[opt] = get_metadata_func(BIDS, subjects);
 
 
 
@@ -81,6 +78,10 @@ for isubj = 1:nb_subj
         
 %         files_to_delete = three_dim_files(1:nb_dummy_scans);
 %         delete(files_to_delete.fname)
+
+        if numel(three_dim_files)>max_nb_vols
+            error('we must remove some volumes');
+        end
         
         fprintf('repairing slices: sub %s run %s \n', ...
             num2str(isubj), num2str(irun))
@@ -145,8 +146,8 @@ for isubj = 1:nb_subj
     
     
     fprintf('\nslice timing: sub %s \n', num2str(isubj))
-    for iSlice_ref = 1:numel(slice_reference)
-        opt.slice_reference = slice_reference(iSlice_ref);
+    for iSlice_ref = 1:numel(opt.slice_reference)
+        opt.opt.slice_reference = opt.slice_reference(iSlice_ref);
         matlabbatch = slice_timing_batch(matlabbatch, 1+iSlice_ref, subjects{isubj}.func, opt);
     end
 %     spm_jobman('run', matlabbatch)
@@ -156,9 +157,9 @@ for isubj = 1:nb_subj
     for iRun = 1:nb_runs
         [filepath, name, ext] = spm_fileparts(subjects{isubj}.func{iRun});
         images_2_despike = spm_select('FPList', filepath, ['^a_01ug' name '_00.*' ext '$']);
-%         art_despike(images_2_despike,3,4);
+%         art_despike(images_2_despike, FiltType, Despike);
         images_2_despike = spm_select('FPList', filepath, ['^a_21ug' name '_00.*' ext '$']);
-%         art_despike(images_2_despike,3,4);
+%         art_despike(images_2_despike, FiltType, Despike); ,
     end
     
     
@@ -181,10 +182,10 @@ for isubj = 1:nb_subj
     
     matlabbatch = [];
     idx = 1;
-    for iRes = 1:numel(res)
-        matlabbatch = normalize_batch(matlabbatch, idx, input_files, segment_mat, res(iRes));
+    for iRes = 1:numel(opt.norm_res)
+        matlabbatch = normalize_batch(matlabbatch, idx, input_files, segment_mat, opt.norm_res(iRes));
         idx = idx + 1;
-        matlabbatch = normalize_batch(matlabbatch, idx, func_files, segment_mat, res(iRes));
+        matlabbatch = normalize_batch(matlabbatch, idx, func_files, segment_mat, opt.norm_res(iRes));
         idx = idx + 1;
     end
     
@@ -198,7 +199,7 @@ for isubj = 1:nb_subj
         [filepath, name, ext] = spm_fileparts(subjects{isubj}.func{iRun});
         func_files = [func_files ; spm_select('FPList', filepath, ['^w_.*da_.*ug' name '_00.*' ext '$'])]; %#ok<*AGROW>
     end
-    matlabbatch = smooth_batch(matlabbatch, 5, func_files, FWHM);
+    matlabbatch = smooth_batch(matlabbatch, 1, func_files, FWHM);
     
 %     spm_jobman('run', matlabbatch)
 end
@@ -215,13 +216,13 @@ for isubj = 1:nb_subj
     for iRun = 1:nb_runs
         [filepath, name, ext] = spm_fileparts(subjects{isubj}.func{iRun});
 
-        for iRes = 1:numel(res)
-            for iSlice_ref = 1:numel(slice_reference)
+        for iRes = 1:numel(opt.norm_res)
+            for iSlice_ref = 1:numel(opt.slice_reference)
                 idx = idx + 1;
                 input_files = spm_select('FPList', filepath, ...
-                    ['^sw_' sprintf('%02.0f',res(iRes)) 'da_' sprintf('%02.0f',slice_reference(iSlice_ref)) '.*' name '_00.*' ext '$']); %#ok<*AGROW>
+                    ['^sw_' sprintf('%02.0f',opt.norm_res(iRes)) 'da_' sprintf('%02.0f',opt.slice_reference(iSlice_ref)) '.*' name '_00.*' ext '$']); %#ok<*AGROW>
                 output_name = fullfile(filepath, ...
-                    ['sw' sprintf('%02.0f',res(iRes)) '_da-' sprintf('%02.0f',slice_reference(iSlice_ref)) '_ug_' name ext]);
+                    ['sw' sprintf('%02.0f',opt.norm_res(iRes)) '_da-' sprintf('%02.0f',opt.slice_reference(iSlice_ref)) '_ug_' name ext]);
                 matlabbatch = threeD_to_fourD(matlabbatch, idx, input_files, output_name);
             end
         end
