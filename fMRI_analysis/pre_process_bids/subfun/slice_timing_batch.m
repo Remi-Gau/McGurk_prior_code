@@ -1,4 +1,4 @@
-function matlabbatch = slice_timing_batch(matlabbatch,idx,input_files,opt)
+function matlabbatch = slice_timing_batch(matlabbatch, idx, input_files, opt, slice_reference)
 
 nb_runs = numel(input_files);
 
@@ -18,7 +18,7 @@ matlabbatch{idx}.spm.temporal.st.nslices = opt.nb_slices;
 matlabbatch{idx}.spm.temporal.st.tr = opt.TR;
 matlabbatch{idx}.spm.temporal.st.ta = opt.TA;
 matlabbatch{idx}.spm.temporal.st.so = opt.acquisition_order ;
-matlabbatch{idx}.spm.temporal.st.refslice = opt.slice_reference;
-matlabbatch{idx}.spm.temporal.st.prefix = ['a_' sprintf('%02.0f',opt.slice_reference)];
+matlabbatch{idx}.spm.temporal.st.refslice = slice_reference;
+matlabbatch{idx}.spm.temporal.st.prefix = ['a_' sprintf('%02.0f',slice_reference)];
 
 end
