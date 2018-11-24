@@ -11,8 +11,8 @@
 % GLMdenoise OFF, 1, 2 or 3 (original study was OFF)
 % RT correction (original study had both)
 
-
-%%% mvt noise regressors (ON or OFF) ??? not done when denoise ???
+% time derivative (used or not ; original study was used)
+% mvt noise regressors (ON or OFF ; original study was ON)
 
 clear
 clc
