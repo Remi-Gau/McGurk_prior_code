@@ -1,0 +1,9 @@
+[submodule "toolboxes/art_repair"]
+	path = toolboxes/art_repair
+	url = https://github.com/Remi-Gau/art_repair.git
+[submodule "toolboxes/spmup"]
+	path = toolboxes/spmup
+	url = https://github.com/Remi-Gau/spmup.git
+[submodule "toolboxes/GLMdenoise"]
+	path = toolboxes/GLMdenoise
+	url = https://github.com/Remi-Gau/GLMdenoise.git
