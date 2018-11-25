@@ -11,7 +11,7 @@ opt.epi_res = diag(hdr(1).mat);
 opt.epi_res(end) = [];
 opt.epi_res = abs(min(opt.epi_res));
 opt.norm_res = [2 opt.epi_res];
-opt.norm_res = [2 -3];
+% opt.norm_res = [2 -3];
 
 
 metadata = spm_BIDS(BIDS, 'metadata', 'sub', subjs_ls{1}, 'type', 'bold', ...

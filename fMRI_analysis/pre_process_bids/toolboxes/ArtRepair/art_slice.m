@@ -81,7 +81,7 @@ if strcmp(spm_ver,'spm5')
     if exist('Pimages','var') == 0, Pimages  = spm_select(Inf,'image','select images'); end
  else  % spm2 version
     %mask = spm_get(1, '.img', 'Select mask image in functional space');
-    if exist('Pimages','var') == 0, Pimages  = spm_get(Inf,'image','select images'); end;
+    if exist('Pimages','var') == 0, Pimages  = spm_get(Inf,'image','select images'); end
  end
 
 P = spm_vol(Pimages);
@@ -99,17 +99,17 @@ if ( repair_flag == 4 ) amask = 1; allfilt = 0; slicefilt = 1; end
 if ( repair_flag == 5 ) amask = 1; allfilt = 1; slicefilt = 0; end
 
 %  Set the prefix correctly on the written files
-if  ( amask ==1 & allfilt == 0 & slicefilt == 0 ) prechar = 'h'; end
-if  ( amask ==1 & allfilt == 1 & slicefilt == 0 ) prechar = 'fh'; end
-if  ( amask ==1 & allfilt == 0 & slicefilt == 1 ) prechar = 'gh'; end
-if  ( amask ==0 & allfilt == 1 & slicefilt == 0 ) prechar = 'f'; end
-if  ( amask ==0 & allfilt == 0 & slicefilt == 1 ) prechar = 'g'; end
+if  ( amask ==1 && allfilt == 0 && slicefilt == 0 ) prechar = 'h'; end
+if  ( amask ==1 && allfilt == 1 && slicefilt == 0 ) prechar = 'fh'; end
+if  ( amask ==1 && allfilt == 0 && slicefilt == 1 ) prechar = 'gh'; end
+if  ( amask ==0 && allfilt == 1 && slicefilt == 0 ) prechar = 'f'; end
+if  ( amask ==0 && allfilt == 0 && slicefilt == 1 ) prechar = 'g'; end
 
 fprintf('\n NEW IMAGE FILES WILL BE CREATED');
 fprintf('\n The filtered scan data will be saved in the same directory');
 fprintf('\n with %s pre-pended to their filenames.\n',prechar);
 
-if amask == 1 | slicefilt == 1 %  Automask options
+if amask == 1 || slicefilt == 1 %  Automask options
     if exist('mask_flag','var') == 0
         mask_flag = spm_input('Which mask image to use?', 1, 'm', ...
     'Automatic ( will generate ArtifactMask image ) | User specified mask ',...
@@ -144,9 +144,9 @@ if slicefilt == 1  % Prepare some thresholds for slice testing.
     % Find the slice orientation used to collect the data
     [ vx, vy, vz ] = size(Automask);
     orient = 0;
-    if ( vx < vy & vx < vz ) orient = 1; disp(' Remove bad Sagittal slices'); end
-    if ( vy < vx & vy < vz ) orient = 2; disp(' Remove bad Coronal slices'); end
-    if ( vz < vx & vz < vy ) orient = 3; disp(' Remove bad Axial slices'); end
+    if ( vx < vy && vx < vz ) orient = 1; disp(' Remove bad Sagittal slices'); end
+    if ( vy < vx && vy < vz ) orient = 2; disp(' Remove bad Coronal slices'); end
+    if ( vz < vx && vz < vy ) orient = 3; disp(' Remove bad Axial slices'); end
     nslice = min([vx vy vz]);
     if ( orient == 0 ) 
         disp('Cannot determine slice orientation for bad slice filtering.')
@@ -173,7 +173,7 @@ if slicefilt == 1  % Prepare some thresholds for slice testing.
        disp(percentbad)
     % User Input Threshold, and default suggestion.
     if exist('OUTSLICE','var') == 0
-        OUTSLICE = spm_input(['Select threshold (default is shown)' ],1,'n',OUTSLICEdef); 
+        OUTSLICE = spm_input('Select threshold (default is shown)', 1, 'n',OUTSLICEdef); 
     end
     pq = pq + OUTSLICE;  % pq array is the threshold test for bad slices.
     fprintf('\n Interpolating new values for bad slices when ');
@@ -457,7 +457,7 @@ for i = 3:nscans
         
         LastGoodVol = Yn2;
         
-        if  ( allfilt == 0 & slicefilt == 0 )  % Head mask only.
+        if  ( allfilt == 0 && slicefilt == 0 )  % Head mask only.
             Yn2 = squeeze(Y4(2,:,:,:));
         end
         % Yn is a 4D file including the smoothed Y2 now.
@@ -525,11 +525,11 @@ disp(['Done! ' num2str(BadError) ' slices fixed (' num2str(round(badpercent)) '%
 %---------------------------------------------------------------
 % Create and write image without the scale and offset steps  
 % This function is spm_write_vol without error checking and scaling.
-function noscale_write_vol(V,Y);
+function noscale_write_vol(V,Y)
 V = spm_create_vol(V);
-for p=1:V.dim(3),
+for p=1:V.dim(3)
     V = spm_write_plane(V,Y(:,:,p),p);
-end;
+end
 %V = spm_close_vol(V);  % not for SPM5
 
 
