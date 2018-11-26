@@ -2,7 +2,7 @@
 
 docker run -it --rm \
 -v /c/Users/Remi/Documents/McGurk/:/data:ro \
--v /c/Users/Remi/Documents/McGurk/code/fMRI_analysis/pre_process_bids/:/code/mcgurk \
+-v /c/Users/Remi/Documents/McGurk/code/:/code/mcgurk \
 -v /c/Users/Remi/Documents/McGurk/derivatives/:/output \
 octave_spm_maumet:0.0.1 script '/code/run_preprocessing.m'
 

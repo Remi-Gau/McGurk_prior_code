@@ -33,11 +33,13 @@ BIDS_dir = fullfile(data_dir, 'rawdata');
 % output_dir = 'C:\Users\Remi\Documents\McGurk\derivatives';
 output_dir = '/output';
 
+code_dir = '/code/mcgurk';
+
 % add spm12 and spmup to path
 addpath(fullfile('/code/spm12'));
-addpath(genpath(fullfile(pwd, 'toolboxes', 'spmup')));
-addpath(genpath(fullfile(pwd, 'toolboxes', 'ArtRepair')));
-addpath(fullfile(pwd, 'subfun'));
+addpath(genpath(fullfile(code_dir, 'toolboxes', 'spmup')));
+addpath(genpath(fullfile(code_dir, 'toolboxes', 'art_repair')));
+addpath(fullfile(code_dir,'fMRI_analysis','pre_process_bids', 'subfun'));
 
 
 
