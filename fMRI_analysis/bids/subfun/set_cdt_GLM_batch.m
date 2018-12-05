@@ -10,14 +10,7 @@ if ~isempty(cdt.onsets)
     matlabbatch{idx}.spm.stats.fmri_spec.sess(1,irun).cond(1,end).duration = 0;
     matlabbatch{idx}.spm.stats.fmri_spec.sess(1,irun).cond(1,end).tmod = 0;
     
-    switch cfg.stim_onset
-        case 'A'
-            onset_delay = (1-0.04*8)/2;
-        case 'V'
-            onset_delay = (1-0.04*8)/2 * -1;
-        case 'B'
-            onset_delay = 0;
-    end
+    onset_delay = get_onset_delay(cfg);
     
     matlabbatch{idx}.spm.stats.fmri_spec.sess(1,irun).cond(1,end).onset = ...
         cdt.onsets + onset_delay ;

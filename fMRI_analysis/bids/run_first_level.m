@@ -7,7 +7,7 @@
 
 % HPF none, 100, 200 (original study was 200)
 % stim onset on audio, on video, in between
-% Blocks of none, Exp83, Exp100, square100 (original study was Exp100)
+% Blocks of none, Exp83, Exp100, Square83, Square100 (original study was Exp100)
 % GLMdenoise OFF, 1, 2 or 3 (original study was OFF)
 % RT correction (original study had both)
 
@@ -37,6 +37,8 @@ CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
 % add spm12 and spmup to path
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'spmup')));
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'art_repair')));
+addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'GLMdenoise')));
+
 addpath(fullfile(CODE_DIR,'fMRI_analysis','bids', 'subfun'));
 
 
@@ -63,7 +65,7 @@ opt.GLM_denoise = [0 1 2 3]; % GLMdenoise OFF, 1, 2 or 3 (original study was OFF
 opt.HPF = [Inf 100 200]; % HPF none, 100, 200 (original study was 200)
 opt.stim_onset = {'A' 'V' 'B'}; % stim onset on audio, on video, in between
 opt.RT_correction = [0 1]; % RT correction (original study had both)
-opt.block_type = {'none' '083e' '100e' '100s'}; % % Blocks of none, Exp83, Exp100, square100 (original study was Exp100)
+opt.block_type = {'none' '083s' '083e' '100s' '100e'}; % % Blocks of none, Exp83, Exp100, square100 (original study was Exp100)
 opt.time_der = [0 1]; % time derivative (used or not ; original study was used)
 opt.mvt = [0 1]; % mvt noise regressors (ON or OFF ; original study was ON)
 
@@ -71,13 +73,13 @@ opt.mvt = [0 1]; % mvt noise regressors (ON or OFF ; original study was ON)
 sets{1} = 1:numel(opt.despiked); %#ok<*NASGU>
 sets{end+1} = 2; %opt.slice_reference
 sets{end+1} = 1; %opt.norm_res
-sets{end+1} = 1; %:numel(opt.GLM_denoise);
+sets{end+1} = 3; %:numel(opt.GLM_denoise);
 sets{end+1} = 1:numel(opt.HPF);
 sets{end+1} = 1:numel(opt.stim_onset);
-sets{end+1} = 1:numel(opt.RT_correction);
-sets{end+1} = 1:numel(opt.block_type);
-sets{end+1} = 1:numel(opt.time_der);
-sets{end+1} = 1:numel(opt.mvt);
+sets{end+1} = numel(opt.RT_correction);
+sets{end+1} = numel(opt.block_type);
+sets{end+1} = numel(opt.time_der);
+sets{end+1} = numel(opt.mvt);
 
 [a, b, c, d, e, f, g, h, i, j] = ndgrid(sets{:}); clear sets
 all_GLMs = [a(:), b(:), c(:), d(:), e(:), f(:), g(:), h(:), i(:), j(:)];
@@ -171,43 +173,25 @@ for isubj = 1:nb_subj
 
             % adds extra regressors (blocks, RT param mod, ...) for this session
             matlabbatch = ...
-                set_extra_regress_batch(matlabbatch, 1, iRun, cfg, blocks, RT_regressors_col);
+                set_extra_regress_batch(matlabbatch, 1, iRun, opt, cfg, blocks, RT_regressors_col);
         end
         
+        % runs GLMdenoise and adds noise regressors if necessary
+        matlabbatch = get_reg_GLMdenoise(matlabbatch, cfg, analysis_dir);
+
         % specify design
         spm_jobman('run', matlabbatch)
         
-        % estimamte design
+        % concatenates
+        
+        % estimate design
         matlabbatch = [];
         matlabbatch{1}.spm.stats.fmri_est.spmmat{1,1} = fullfile(analysis_dir, 'SPM.mat');    
         matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1; 
         spm_jobman('run', matlabbatch)
         
-        
-        %                             % denoise 1
-        %                             Results = GLMdenoisedata(Design, Data, Condition_Duration, TR, 'assume', [], opt,'DenoiseFig')
-        %
-        %                             % denoise 2
-        %                             opt.numpcstotry = 20;
-        %                             opt.denoisespec =  '00000';
-        %                             Results = GLMdenoisedata(Design, Data, Condition_Duration, TR, 'assume', 1, opt,'DenoiseFig')
-        %
-        %                             % denoise 3
-        %                             Results = GLMdenoisedata(Design, Data, Condition_Duration, TR, 'assume', 1, opt,'DenoiseFig')
-        %
-        %                             DenoiseResults.pcnum =  Results.pcnum;
-        %                             DenoiseResults.pcregressors =  Results.pcregressors;
-        %
-        %                             save(['DenoiseDay' num2str(Day_Ind) '.mat'], 'Design', 'Condition_Duration', 'TR', 'opt', 'DenoiseResults', 'Runs2Include')
-        %
-        %                             for j=1:DenoiseResults.pcnum
-        %                                 matlabbatch{1,1}.spm.stats.fmri_spec.sess(1,i).regress(1,end+1).name = strcat('Noise Regresor ', num2str(j));
-        %                                 matlabbatch{1,1}.spm.stats.fmri_spec.sess(1,i).regress(1,end).val = double(DenoiseResults.pcregressors{1,i}(:,j));
-        %                             end
-        
-        
-        
-        
+        % estimate contrasts
+
     end
     
     
