@@ -9,11 +9,11 @@ matlabbatch{idx}.spm.spatial.coreg.estimate.eoptions.sep = [4,2];
 matlabbatch{idx}.spm.spatial.coreg.estimate.eoptions.tol = [repmat(0.02, 1, 3), repmat(0.001, 1, 3), repmat(0.01, 1, 3), repmat(0.001, 1, 3)];
 matlabbatch{idx}.spm.spatial.coreg.estimate.eoptions.fwhm = [7,7];
 
-[filepath] = spm_fileparts(target);
+[filepath] = spm_fileparts(source);
 coreg_mat_name = strcat('coreg_mat_', datestr(now, 'yyyy_mm_dd_HH_MM'), '.mat');
 
 matlabbatch{idx+1}.cfg_basicio.var_ops.cfg_save_vars.name = coreg_mat_name;
-matlabbatch{idx+1}.cfg_basicio.var_ops.cfg_save_vars.outdir = filepath;
+matlabbatch{idx+1}.cfg_basicio.var_ops.cfg_save_vars.outdir = {filepath};
 matlabbatch{idx+1}.cfg_basicio.var_ops.cfg_save_vars.vars(1).vname = 'M';
 matlabbatch{idx+1}.cfg_basicio.var_ops.cfg_save_vars.vars(1).vcont(1) = ...
     cfg_dep('Coregister: Estimate: Coregistration Matrix', ...
