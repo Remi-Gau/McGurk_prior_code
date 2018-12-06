@@ -1,4 +1,5 @@
 function [cdt, blocks]= get_cdt_onsets(cdt, blocks, onsets, iRun)
+% Defines the different conditions we will use in the GLMs with their onset and durations 
 
 minimum_RT = 0.8;
 maximum_RT = 990;
@@ -40,12 +41,12 @@ is_other(is_missed) = 0;
 
 % check that some responses are not labelled twice
 if any(sum([is_vis, is_fus], 2) == 2) || any(sum([is_aud, is_fus], 2) == 2)
-    error('we missed one stimuli')
+    error('some stimuli seem to be labelled twice')
 end
 
 % check that we did not forget to label any stimuli
 if sum(any([is_vis, is_aud, is_fus, is_other, is_missed], 2)) ~= size(stim_file,1)
-    error('we missed one stimuli')
+    error('we missed one or more stimuli')
 end
 
 
@@ -94,24 +95,24 @@ end
 
 
 %% define blocks
-blocks(iRun,1).name = 'con';
+blocks(iRun,1).name = 'con*bf(1)';
 
 % onset of all congruent stim
 onsets_con = onsets{iRun}.onset(is_con);
 % onset of the the first congruent stim of each block
-blocks(iRun,1).onsets_1 = onsets_con(1:8:end); 
+blocks(iRun,1).onsets_1 = onsets_con(1:nb_stim_per_block:end); 
 % onset of the the second congruent stim of each block
-blocks(iRun,1).onsets_2 = onsets_con(2:8:end);
+blocks(iRun,1).onsets_2 = onsets_con(2:nb_stim_per_block:end);
 
 
 
-blocks(iRun,2).name = 'inc';
+blocks(iRun,2).name = 'inc*bf(1)';
 % onset of all incongruent stim
 onsets_inc = onsets{iRun}.onset(is_inc);
 % onset of the the first incongruent stim of each block
-blocks(iRun,2).onsets_1 = onsets_inc(1:8:end); 
+blocks(iRun,2).onsets_1 = onsets_inc(1:nb_stim_per_block:end); 
 % onset of the the second incongruent stim of each block
-blocks(iRun,2).onsets_2 = onsets_inc(2:8:end);
+blocks(iRun,2).onsets_2 = onsets_inc(2:nb_stim_per_block:end);
 
 end
 

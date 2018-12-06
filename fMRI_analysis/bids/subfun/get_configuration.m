@@ -12,6 +12,7 @@ function cfg = get_configuration(all_GLMs, opt, iGLM)
         cfg.block_type = opt.block_type{all_GLMs(iGLM,8)};
         cfg.time_der = opt.time_der(all_GLMs(iGLM,9));
         cfg.mvt = opt.mvt(all_GLMs(iGLM,10));
+        cfg.concat = opt.concat(all_GLMs(iGLM,11));
         
 end
 

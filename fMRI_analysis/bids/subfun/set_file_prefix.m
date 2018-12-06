@@ -1,4 +1,4 @@
-function func_file_prefix = set_func_file_prefix(cfg)
+function func_file_prefix = set_file_prefix(cfg)
 %gets the right prefix for the files to use
         
         if cfg.despiked

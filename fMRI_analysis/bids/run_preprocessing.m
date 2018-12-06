@@ -60,7 +60,7 @@ nb_subj = numel(spm_BIDS(BIDS, 'subjects'));
 
 % get additional data from metadata (TR, resolution, slice timing
 % parameters)
-[opt] = get_metadata_func(BIDS, subjects, TASK);
+[opt] = get_metadata(BIDS, subjects, TASK);
 
 
 

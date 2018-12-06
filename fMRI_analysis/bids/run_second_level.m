@@ -35,11 +35,7 @@ OUTPUT_DIR = '/output';
 % CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
 CODE_DIR = '/code/mcgurk';
 
-% add spm12 and spmup to path
-addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'spmup')));
-addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'art_repair')));
-addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'GLMdenoise')));
-
+% set path
 addpath(fullfile(CODE_DIR,'fMRI_analysis','bids', 'subfun'));
 
 
@@ -65,7 +61,7 @@ nb_subj = numel(subj_ls);
 
 
 %%
-for isubj = 1:nb_subj
+for isubj = nb_subj
     
     nb_runs = numel(subjects{isubj}.func);
     
