@@ -27,6 +27,20 @@ sets{end+1} = 1:numel(opt.time_der);
 sets{end+1} = 1:numel(opt.mvt);
 sets{end+1} = 1; %1:numel(opt.concat);
 
+% comment the lines above and uncomment the following if you only want to
+% run the pipelines for the published results 
+% sets{1} = 1;
+% sets{end+1} = 2; 
+% sets{end+1} = 1;
+% sets{end+1} = 1;
+% sets{end+1} = 3;
+% sets{end+1} = 3;
+% sets{end+1} = 1;
+% sets{end+1} = 5;
+% sets{end+1} = 2;
+% sets{end+1} = 2;
+% sets{end+1} = 0;
+
 [a, b, c, d, e, f, g, h, i, j, k] = ndgrid(sets{:}); clear sets
 all_GLMs = [a(:), b(:), c(:), d(:), e(:), f(:), g(:), h(:), i(:), j(:), k(:)];
 
