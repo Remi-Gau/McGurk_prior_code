@@ -2,7 +2,7 @@
 
 This code relates to the experiment and paper [How prior expectations shape multisensory perception](10.1016/j.neuroimage.2015.09.045).
 
-I have uploaded the original results of this study on [neurovault](https://neurovault.org/). It is currently on a private project and I am checking if this fMRI study had the proper ethical permission to make this type of group level results openly available. Bear with me but do get in touch if you want to get access to those statistical maps in the meantime.
+I have uploaded the original results of this study on [neurovault](https://neurovault.org/). It is currently on a private collection and I am checking if this fMRI study had the proper ethical permission to make this type of group level results openly available. Bear with me but do get in touch if you want to get access to those statistical maps in the meantime.
 
 ## Original version of the code
 The script to run (orginally with matlab 2010a and psychtoolbox version 3.09) the fMRI and behavioral experiments are in the `fMRI` and `psychophysics` folders respectively. Still in need of better documentation. :-(
@@ -17,10 +17,11 @@ Scripts for the many other analysis that we tried and were not published or ment
 I have made a BIDS dataset of the original fMRI data. I am checking if this fMRI study had the proper ethical permission to make the data fully open. Bear with me but do get in touch if you want to know more.
 
 ## BIDS compatible pipeline of 'all' analysis performed
-For the sake of transparency, clarity and reproducibility/replicability, I am working docker based pipeline relying on octave and SPM and using the BIDS format. It is in the `bids_fMRI_analysis` folder.
+For the sake of transparency, clarity and reproducibility/replicability, I am working docker based pipeline relying on octave + SPM12 and using the BIDS format. It is in the `bids_fMRI_analysis` folder. To stay close to the original pipeline run with SPM8 the normalization was done with the `old norm` module in SPM12.
 
 ### Requirements
-At the moment this runs under matlab (2018a) and SPM12 (v7219) but I am struggling to make some of the SPM toolboxes play nice with octave. The toolboxes are thus added as submodules to the repository as I sometimes need to add some octave related fix to them.
+At the moment this runs under matlab (2018a) and SPM12 (v7219) but I am struggling to make some of the SPM toolboxes play nice with octave (or even with 4D nifti files... Yup in 2018 this still happens). I have therefore forked the original repository and added those forks as submodules to the repository as I sometimes need to add some octave related fix to them.
+
 
 ### How to run the code
 1.  `run_preprocessing.m` will run all the different preprocessing pipelines
@@ -33,51 +34,49 @@ In general this work is clearer and better documented although not yet perfect. 
 *   despiking the data using [art repair](https://cibsr.stanford.edu/tools/human-brain-project/artrepair-software.html)
   -   `OFF`
   -   `ON` (\*)
-  -
 
 *   denoising the data using [GLMdenoise](http://kendrickkay.net/GLMdenoise/)  (1-3 are different ways to denoise the data)
-  - `OFF` (\*)
-  - `1`
-  - `2`
-  - `3`
+  -   `OFF` (\*)
+  -   `1`
+  -   `2`
+  -   `3`
 
 *   high-pass filter:
 `none`
 `100 seconds`
 `200 seconds` (\*)
+
 *   stimulus onset aligned to
-auditory component (`A`) of the movie,
-the visual component (`V`)
-or in between `B` (\*)
+  -   auditory component (`A`) of the movie,
+  -   the visual component (`V`)
+  -   or in between `B` (\*)
 
 *   reaction time effect correction on activations
-`ON`
-`OFF` (\* original mentions both but only reports results for `OFF`)
+  -   `ON`
+  -   `OFF` (\* original mentions both but only reports results for `OFF`)
 
 *   type of blocks for the context effect (check methods of the manuscript for an explanation of exponential rising blocks)
-  -  `none`
-  -  `83 seconds boxcar`
-  -  `100 seconds boxcar`
-  -  `83 seconds exponential`
-  -  `100 seconds exponential`
+  -   `none`
+  -   `83 seconds boxcar`
+  -   `100 seconds boxcar`
+  -   `83 seconds exponential`
+  -   `100 seconds exponential`
 
 *   include time derivative of the HRF
-  -  `OFF`
-  -  `ON` (\*)
+  -   `OFF`
+  -   `ON` (\*)
 
 *   include realignment parameters in the design matrix
-  -  `OFF`
-  -  `ON` (\*)
+  -   `OFF`
+  -   `ON` (\*)
 
 *   concatenate design
-  - `OFF` (\*)
-  - `ON`
+  -   `OFF` (\*)
+  -   `ON`
 
-While cleaning and documenting this project I realized that some pre-processing pipelines might have had some error (or poor practice) in them but because of bad documenting, I am not sure whether they were the pipeline used for the published results. Those included:
+While cleaning and documenting this project I realized that some pre-processing pipelines might have had some error (or poor practice) in them but because of bad documenting, I am not sure whether they were the pipeline used for the published results. To check whether this affected the results I have also run processing pipelines for those options. Those included:
 -   running the slice-timing using the first slice as reference and not the mid-volume slice
 -   normalizing the data using 2 mm rather than the original EPI resolution (3 mm). See [here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5487467/) why this might be a problem if not controlling for final image smoothness when using random field theory to control for multiple correction.
-
-To check whether this affected the results I have also run processing pipelines for those options.
 
 In total all those options would amount to a about 10 000 different models to run.
 

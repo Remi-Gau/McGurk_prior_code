@@ -40,7 +40,7 @@ CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
 % addpath(fullfile('/code/spm12'));
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'spmup')));
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'art_repair')));
-addpath(fullfile(CODE_DIR,'fMRI_analysis','bids', 'subfun'));
+addpath(fullfile(CODE_DIR,'bids_fMRI_analysis', 'subfun'));
 
 
 
@@ -65,7 +65,7 @@ nb_subj = numel(spm_BIDS(BIDS, 'subjects'));
 
 
 %% 3D, slice repair, realign and unwarp
-for isubj = 3 %1:nb_subj
+for isubj = 2 %1:nb_subj
 
     nb_runs = numel(subjects{isubj}.func);
     matlabbatch = [];
@@ -76,37 +76,37 @@ for isubj = 3 %1:nb_subj
             num2str(isubj), num2str(irun))
 
         [filepath, name, ext] = spm_fileparts(subjects{isubj}.func{irun, 1});
+ 
+%         three_dim_files = spm_file_split(subjects{isubj}.func{irun, 1}, filepath);
 
-        three_dim_files = spm_file_split(subjects{isubj}.func{irun, 1}, filepath);
 
-
-        if numel(three_dim_files)>MAX_N_SCANS
-            files_to_delete = three_dim_files([1:N_DUMMY_SCANS MAX_N_SCANS:end]);
-        else
-            files_to_delete = three_dim_files(1:N_DUMMY_SCANS);
-        end
-        delete(files_to_delete.fname)
+%         if numel(three_dim_files)>MAX_N_SCANS
+%             files_to_delete = three_dim_files([1:N_DUMMY_SCANS MAX_N_SCANS:end]);
+%         else
+%             files_to_delete = three_dim_files(1:N_DUMMY_SCANS);
+%         end
+%         delete(files_to_delete.fname)
 
         fprintf('repairing slices: sub %s run %s \n', ...
             num2str(isubj), num2str(irun))
 
         files_to_repair = spm_select('FPList', filepath, ['^' name '_00.*' ext '$']);
 
-        art_slice(files_to_repair, OUTSLICEdef, REPAIR_FLAG, MASK_FLAG)
+%         art_slice(files_to_repair, OUTSLICEdef, REPAIR_FLAG, MASK_FLAG)
 
     end
 
     fprintf('\nrealign and unwarp: sub %s \n', num2str(isubj))
     matlabbatch = realign_unwarp_batch(matlabbatch, 1, subjects{isubj}.func);
     
-    spm_jobman('run', matlabbatch)
+%     spm_jobman('run', matlabbatch)
 
 end
 
 
 
 %% coregister to MNI
-for isubj = 1:nb_subj
+for isubj = 2 %1:nb_subj
 
 
     nb_runs = numel(subjects{isubj}.func);
@@ -137,13 +137,13 @@ for isubj = 1:nb_subj
     matlabbatch = coregister_batch(matlabbatch, numel(matlabbatch)+1, ...
         mean_image, anat, '');
 
-    spm_jobman('run', matlabbatch)
+%     spm_jobman('run', matlabbatch)
 end
 
 
 
 %% segment, slice time, despike, normalize and smooth
-for isubj = 1:nb_subj
+for isubj = 2 %1:nb_subj
 
 
     nb_runs = numel(subjects{isubj}.func);
@@ -161,7 +161,7 @@ for isubj = 1:nb_subj
         matlabbatch = slice_timing_batch(matlabbatch, 1+iSlice_ref, subjects{isubj}.func, opt, slice_reference);
     end
     
-    spm_jobman('run', matlabbatch)
+%     spm_jobman('run', matlabbatch)
 
 
 
@@ -171,7 +171,7 @@ for isubj = 1:nb_subj
             [filepath, name, ext] = spm_fileparts(subjects{isubj}.func{iRun});
             images_2_despike = spm_select('FPList', filepath, ...
                 ['^a_' sprintf('%02.0f',opt.slice_reference(iSlice_ref)) 'ug' name '_00.*' ext '$']);
-            art_despike(images_2_despike, FILT_TYPE, DESPIKE_TYPE);
+%             art_despike(images_2_despike, FILT_TYPE, DESPIKE_TYPE);
         end
     end
 
@@ -222,10 +222,10 @@ for isubj = 1:nb_subj
     spm_jobman('run', matlabbatch)
 end
 
-
+return
 
 %% merge to 4D and clean the other files
-for isubj = 1:nb_subj
+for isubj = 2 %1:nb_subj
 
 
     nb_runs = numel(subjects{isubj}.func);

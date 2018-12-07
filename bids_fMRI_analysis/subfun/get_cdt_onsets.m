@@ -95,7 +95,7 @@ end
 
 
 %% define blocks
-blocks(iRun,1).name = 'con*bf(1)';
+blocks(iRun,1).name = 'con_block';
 
 % onset of all congruent stim
 onsets_con = onsets{iRun}.onset(is_con);
@@ -106,7 +106,7 @@ blocks(iRun,1).onsets_2 = onsets_con(2:nb_stim_per_block:end);
 
 
 
-blocks(iRun,2).name = 'inc*bf(1)';
+blocks(iRun,2).name = 'inc_block';
 % onset of all incongruent stim
 onsets_inc = onsets{iRun}.onset(is_inc);
 % onset of the the first incongruent stim of each block

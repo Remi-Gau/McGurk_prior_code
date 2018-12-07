@@ -23,24 +23,24 @@ clc
 %% Set options, matlab path
 TASK = 'contextmcgurk';
 
-% DATA_DIR = 'C:\Users\Remi\Documents\McGurk';
-DATA_DIR = '/data';
+DATA_DIR = 'C:\Users\Remi\Documents\McGurk';
+% DATA_DIR = '/data';
 
 % data set
 BIDS_DIR = fullfile(DATA_DIR, 'rawdata');
 
-% OUTPUT_DIR = 'C:\Users\Remi\Documents\McGurk\derivatives';
-OUTPUT_DIR = '/output';
+OUTPUT_DIR = 'D:\BIDS\McGurk\derivatives';
+% OUTPUT_DIR = '/output';
 
-% CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
-CODE_DIR = '/code/mcgurk';
+CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
+% CODE_DIR = '/code/mcgurk';
 
 % add spm12 and spmup to path
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'spmup')));
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'art_repair')));
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'GLMdenoise')));
 
-addpath(fullfile(CODE_DIR,'fMRI_analysis','bids', 'subfun'));
+addpath(fullfile(CODE_DIR,'bids_fMRI_analysis', 'subfun'));
 
 
 %% get data set info
@@ -65,7 +65,7 @@ nb_subj = numel(subj_ls);
 
 
 %%
-for isubj = 1:nb_subj
+for isubj = 3 %[1 3 4] %1:nb_subj
     
     nb_runs = numel(subjects{isubj}.func);
     
@@ -116,20 +116,10 @@ for isubj = 1:nb_subj
                 subj_ls{isubj})
         end
         
-        analysis_dir = fullfile (OUTPUT_DIR, 'spm_artrepair', ['sub-' subj_ls{isubj}], ...
-            [ 'GLM_' ...
-            'despike-' num2str(cfg.despiked) '_' ...
-            'st-' num2str(cfg.slice_reference) '_' ...
-            'res-' num2str(cfg.norm_res) '_' ...
-            'denoise-' num2str(cfg.GLM_denoise) '_' ...
-            'HPF-' sprintf('%03.0f',cfg.HPF) '_' ...
-            'onset-' cfg.stim_onset '_' ...
-            'RT-' num2str(cfg.RT_correction) '_' ...
-            'block-' cfg.block_type '_' ...
-            'timeder-' num2str(cfg.time_der) '_' ...
-            'mvt-' num2str(cfg.mvt) ...
-            ]);
-        
+        analysis_dir = name_analysis_dir(cfg);
+        analysis_dir = fullfile ( ...
+            OUTPUT_DIR, 'spm_artrepair', ...
+            ['sub-' subj_ls{isubj}], analysis_dir );
         mkdir(analysis_dir)
         
         if cfg.RT_correction
@@ -166,7 +156,7 @@ for isubj = 1:nb_subj
         matlabbatch = get_reg_GLMdenoise(matlabbatch, cfg, analysis_dir);
 
         % specify design
-        spm_jobman('run', matlabbatch)
+%         spm_jobman('run', matlabbatch)
         
         % concatenates
         if cfg.concat
@@ -180,7 +170,7 @@ for isubj = 1:nb_subj
         matlabbatch = [];
         matlabbatch{1}.spm.stats.fmri_est.spmmat{1,1} = fullfile(analysis_dir, 'SPM.mat');    
         matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1; 
-        spm_jobman('run', matlabbatch)
+%         spm_jobman('run', matlabbatch)
         
         % estimate contrasts
         matlabbatch = [];
