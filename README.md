@@ -4,6 +4,7 @@ This code relates to the experiment and paper [How prior expectations shape mult
 
 I have uploaded the original results of this study on [neurovault](https://neurovault.org/). It is currently on a private collection and I am checking if this fMRI study had the proper ethical permission to make this type of group level results openly available. Bear with me but do get in touch if you want to get access to those statistical maps in the meantime.
 
+
 ## Original version of the code
 The script to run (orginally with matlab 2010a and psychtoolbox version 3.09) the fMRI and behavioral experiments are in the `fMRI` and `psychophysics` folders respectively. Still in need of better documentation. :-(
 
@@ -13,11 +14,14 @@ The original scripts to run the analysis presented in the paper are in the `fMRI
 
 Scripts for the many other analysis that we tried and were not published or mentioned in the paper are kept in an `archive` folder on the `archives` branch of this repository.
 
+
 ## BIDS data
-I have made a BIDS dataset of the original fMRI data. I am checking if this fMRI study had the proper ethical permission to make the data fully open. Bear with me but do get in touch if you want to know more.
+I have made a BIDS dataset of the original fMRI data. I am checking if this fMRI study had the proper ethical permission to make the data fully open. In terms of quality control I have the results of the MRIQC pipeline of this dataset. Do get in touch if you want to know more.
+
 
 ## BIDS compatible pipeline of 'all' analysis performed
 For the sake of transparency, clarity and reproducibility/replicability, I am working docker based pipeline relying on octave + SPM12 and using the BIDS format. It is in the `bids_fMRI_analysis` folder. To stay close to the original pipeline run with SPM8 the normalization was done with the `old norm` module in SPM12.
+
 
 ### Requirements
 At the moment this runs under matlab (2018a) and SPM12 (v7219) but I am struggling to make some of the SPM toolboxes play nice with octave (or even with 4D nifti files... Yup in 2018 this still happens). I have therefore forked the original repository and added those forks as submodules to the repository as I sometimes need to add some octave related fix to them.
@@ -27,6 +31,7 @@ At the moment this runs under matlab (2018a) and SPM12 (v7219) but I am struggli
 1.  `run_preprocessing.m` will run all the different preprocessing pipelines
 2.  `run_first_level.m` will run all the different subject level GLMs and computes the contrasts necessary for the group level analysis. See the subfunction `subfun/set_all_GLMS.m` to select which pipelines you want to run.
 3.  `run_second_level.m` (WIP) runs the group level analysis corresponding to the analysis published.
+
 
 ### General comments
 In general this work is clearer and better documented although not yet perfect. This pipeline also tries to incorporate the vast majority the analysis we tried. For example, below is a list of the different choices that were made (but not explored in a systematic manner). The options that were used for the published results are marked with a \*.
@@ -77,6 +82,8 @@ In general this work is clearer and better documented although not yet perfect. 
 While cleaning and documenting this project I realized that some pre-processing pipelines might have had some error (or poor practice) in them but because of bad documenting, I am not sure whether they were the pipeline used for the published results. To check whether this affected the results I have also run processing pipelines for those options. Those included:
 -   running the slice-timing using the first slice as reference and not the mid-volume slice
 -   normalizing the data using 2 mm rather than the original EPI resolution (3 mm). See [here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5487467/) why this might be a problem if not controlling for final image smoothness when using random field theory to control for multiple correction.
+
+Some other pipeline might also have some unorthodox implementation of toolboxes. Notably we originally used the GLMdenoise toolbox to compute noise regressors that we then added to our SPM design matrix. I decided to keep those implementations to see what results we would have got.
 
 In total all those options would amount to a about 10 000 different models to run.
 

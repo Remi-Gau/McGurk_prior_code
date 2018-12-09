@@ -16,5 +16,7 @@ analysis_dir = [ ...
     'concat-' num2str(cfg.concat) ...
     ];
 
+fprintf('\n\nRunning %s\n\n', analysis_dir)
+
 end
 

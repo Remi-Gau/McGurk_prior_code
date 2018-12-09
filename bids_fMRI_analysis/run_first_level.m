@@ -23,7 +23,7 @@ clc
 %% Set options, matlab path
 TASK = 'contextmcgurk';
 
-DATA_DIR = 'C:\Users\Remi\Documents\McGurk';
+DATA_DIR = 'D:\BIDS\McGurk\';
 % DATA_DIR = '/data';
 
 % data set
@@ -45,7 +45,7 @@ addpath(fullfile(CODE_DIR,'bids_fMRI_analysis', 'subfun'));
 
 %% get data set info
 choices = struct(...
-    'outdir', fullfile(OUTPUT_DIR, 'spm_artrepair'), ...
+    'outdir', fullfile(OUTPUT_DIR, 'spm12_artrepair'), ...
     'keep_data', 'on',  ...
     'overwrite_data', 'off');
 
@@ -65,7 +65,7 @@ nb_subj = numel(subj_ls);
 
 
 %%
-for isubj = 3 %[1 3 4] %1:nb_subj
+for isubj = 1:nb_subj
     
     nb_runs = numel(subjects{isubj}.func);
     
@@ -118,7 +118,7 @@ for isubj = 3 %[1 3 4] %1:nb_subj
         
         analysis_dir = name_analysis_dir(cfg);
         analysis_dir = fullfile ( ...
-            OUTPUT_DIR, 'spm_artrepair', ...
+            OUTPUT_DIR, 'spm12_artrepair', ...
             ['sub-' subj_ls{isubj}], analysis_dir );
         mkdir(analysis_dir)
         
@@ -156,7 +156,7 @@ for isubj = 3 %[1 3 4] %1:nb_subj
         matlabbatch = get_reg_GLMdenoise(matlabbatch, cfg, analysis_dir);
 
         % specify design
-%         spm_jobman('run', matlabbatch)
+        spm_jobman('run', matlabbatch)
         
         % concatenates
         if cfg.concat
@@ -170,7 +170,7 @@ for isubj = 3 %[1 3 4] %1:nb_subj
         matlabbatch = [];
         matlabbatch{1}.spm.stats.fmri_est.spmmat{1,1} = fullfile(analysis_dir, 'SPM.mat');    
         matlabbatch{1}.spm.stats.fmri_est.method.Classical = 1; 
-%         spm_jobman('run', matlabbatch)
+        spm_jobman('run', matlabbatch)
         
         % estimate contrasts
         matlabbatch = [];
