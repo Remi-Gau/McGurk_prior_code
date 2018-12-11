@@ -19,7 +19,7 @@ spm('defaults','FMRI')
 
 
 %% Set options, matlab path
-DATA_DIR = 'C:\Users\Remi\Documents\McGurk';
+DATA_DIR = 'D:\BIDS\McGurk\';
 % DATA_DIR = '/data';
 
 % data set
@@ -39,7 +39,7 @@ addpath(fullfile(CODE_DIR,'bids_fMRI_analysis', 'subfun'));
 %% get data set info
 BIDS = spm_BIDS(BIDS_DIR);
 subj_ls = spm_BIDS(BIDS, 'subjects');
-nb_subj = 4;%numel(subj_ls);
+nb_subj = numel(subj_ls);
 
 % set up all the possible of combinations of GLM possible
 opt.norm_res = [2 3];
@@ -88,6 +88,8 @@ for iGLM = 1:size(all_GLMs)
     mkdir(grp_lvl_dir)
     
     contrasts_file_ls = struct('con_name', {}, 'con_file', {});
+    
+    nb_events = {};
     
     %%
     for isubj = 1:nb_subj
