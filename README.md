@@ -24,7 +24,7 @@ For the sake of transparency, clarity and reproducibility/replicability, I am wo
 
 
 ### Requirements
-At the moment this runs under matlab (2018a) and SPM12 (v7219) but I am struggling to make some of the SPM toolboxes play nice with octave (or even with 4D nifti files... Yup in 2018 this still happens). I have therefore forked the original repository and added those forks as submodules to the repository as I sometimes need to add some octave related fix to them.
+At the moment this runs under matlab (2018a) and SPM12 (v7219) but I am struggling to make some of the SPM toolboxes play nice with octave (or even with 4D nifti files... Yup in 2018 this still happens). I have therefore forked the original repository of those toolboxes and added those forks as submodules to the repository as I sometimes need to add some octave related fix to them.
 
 
 ### How to run the code
@@ -94,4 +94,4 @@ For more information see:
 -   specification curves
 -   vibration of effect
 
-Another thing to investigate would be to run model selection on the result of this pipeline.
+Another thing to investigate would be to run model selection on the result of this pipeline (e.g MACS toolbox)

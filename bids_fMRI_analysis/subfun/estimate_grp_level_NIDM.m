@@ -1,7 +1,7 @@
 function matlabbatch = estimate_grp_level_NIDM(matlabbatch, cmp, cdts, scans)
 
 p = 0.01;
-k = 50;
+k = 0;
 
 
 %% estimate design

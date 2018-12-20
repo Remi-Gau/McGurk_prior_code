@@ -62,68 +62,6 @@ spm_jobman('run',jobs);
 
 
 
-%% Print a csv files of the results
-% =========================================================================
-%
-% =========================================================================
-
-Results_file = strcat('Results_file_', xSPM.title,'SVC_ROI_Werner_JoN_2010_.csv');
-
-fid = fopen (Results_file, 'w');
-
-fprintf (fid, '%s', xSPM.title);
-fprintf (fid, '\n\n');
-
-fprintf (fid, '%s', TabDat.tit);
-fprintf (fid, '\n\n');
-
-fprintf (fid, TabDat.ftr{6,1}, TabDat.ftr{6,2});
-fprintf (fid, '\n\n');
-
-fprintf (fid, 'Cluster forming threshold = %s;', xSPM.thresDesc);
-fprintf (fid, '\n\n');
-
-fprintf (fid, 'Minimum cluster size %i;', xSPM.k);
-fprintf (fid, '\n\n');
-
-fprintf (fid, 'Smoothness (FWHM in mm);');
-fprintf (fid, '%6.3f;', xSPM.FWHM .* xSPM.VOX);
-fprintf (fid, '\n\n');
-
-fprintf (fid, 'Resel count %6.3f;', TabDat.ftr{8,2}(3));
-fprintf (fid, '\n\n');
-
-fprintf (fid, 'Voxel count %6.3f;', TabDat.ftr{8,2}(2));
-fprintf (fid, '\n\n');
-
-fprintf (fid, '\n');
-
-
-
-%% Print the header
-for i=1:size(TabDat.hdr,1)-1
-    for j=1:size(TabDat.hdr,2)
-        fprintf (fid, '%s;', TabDat.hdr{i,j});
-    end
-    fprintf (fid, '\n');
-end
-
-
-
-%% Print the data
-for i=1:size(TabDat.dat,1)
-    for j=1:size(TabDat.dat,2)
-        fprintf (fid, '%6.3f;', TabDat.dat{i,j});
-    end
-    fprintf (fid, '\n\n\n\n');
-end
-
-
-
-%%
-fclose (fid);
-
-
 
 %%
 % =========================================================================

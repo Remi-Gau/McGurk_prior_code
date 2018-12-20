@@ -23,17 +23,27 @@ clc
 %% Set options, matlab path
 TASK = 'contextmcgurk';
 
-DATA_DIR = 'D:\BIDS\McGurk\';
-% DATA_DIR = '/data';
+% containers
+DATA_DIR = '/data';
+OUTPUT_DIR = '/output/spm12_artrepair';
+CODE_DIR = '/code/mcgurk';
+% addpath(fullfile('/opt/spm12'));
+% spm_get_defaults('stats.maxmem', 2^20)
 
-% data set
-BIDS_DIR = fullfile(DATA_DIR, 'rawdata');
+% windows matlab
+% DATA_DIR = 'C:\Users\Remi\Documents\McGurk';
+% DATA_DIR = 'D:\BIDS\McGurk\';
+% DATA_DIR = 'D:\Dropbox\BIDS\McGurk\';
+% OUTPUT_DIR = 'C:\Users\Remi\Documents\McGurk\derivatives\spm12_artrepair';
+% OUTPUT_DIR = 'D:\Dropbox\BIDS\McGurk\derivatives\spm8_artrepair';
+% CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
 
-OUTPUT_DIR = 'D:\BIDS\McGurk\derivatives';
-% OUTPUT_DIR = '/output';
+% subsystem
+% DATA_DIR = '/mnt/c/Users/Remi/Documents/McGurk/';
+% OUTPUT_DIR = '/mnt/c/Users/Remi/Documents/McGurk/derivatives';
+% CODE_DIR = '/mnt/c/Users/Remi/Documents/McGurk/code';
+% addpath('/home/remi-gau/spm12')
 
-CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
-% CODE_DIR = '/code/mcgurk';
 
 % add spm12 and spmup to path
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'spmup')));
@@ -42,18 +52,24 @@ addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'GLMdenoise')));
 
 addpath(fullfile(CODE_DIR,'bids_fMRI_analysis', 'subfun'));
 
+global defaults;
+defaults = spm_get_defaults;
+
+
+% data set
+BIDS_DIR = fullfile(DATA_DIR, 'rawdata');
 
 %% get data set info
 choices = struct(...
-    'outdir', fullfile(OUTPUT_DIR, 'spm12_artrepair'), ...
+    'outdir', OUTPUT_DIR, ...
     'keep_data', 'on',  ...
     'overwrite_data', 'off');
 
 cd(choices.outdir)
 
 [BIDS, subjects, options] = spmup_BIDS_unpack(BIDS_DIR, choices);
-
 subj_ls = spm_BIDS(BIDS, 'subjects');
+
 nb_subj = numel(subj_ls);
 
 % get additional data from metadata (TR, resolution, slice timing
@@ -63,9 +79,12 @@ nb_subj = numel(subj_ls);
 % set up all the possible of combinations of GLM possible
 [opt, all_GLMs] = set_all_GLMS(opt);
 
+% manually specify prefix of the images to use
+% opt.prefix = 'swdaug';
+
 
 %%
-for isubj = 1:nb_subj
+for isubj = 1%:nb_subj
     
     nb_runs = numel(subjects{isubj}.func);
     
@@ -103,7 +122,7 @@ for isubj = 1:nb_subj
                 ['^' func_file_prefix name ext '$']);
             
             rp_mvt_files{iRun,1} = ...
-                spm_select('FPList', filepath, ['^rp_.*' name '_00.*.txt$']);
+                spm_select('FPList', filepath, ['^rp_.*' name '.*.txt$']);
         end
         
         % to make sure that we got the data and the RP files
@@ -118,7 +137,7 @@ for isubj = 1:nb_subj
         
         analysis_dir = name_analysis_dir(cfg);
         analysis_dir = fullfile ( ...
-            OUTPUT_DIR, 'spm12_artrepair', ...
+            OUTPUT_DIR, ...
             ['sub-' subj_ls{isubj}], analysis_dir );
         mkdir(analysis_dir)
         

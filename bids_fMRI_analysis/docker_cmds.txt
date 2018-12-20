@@ -1,29 +1,29 @@
---entrypoint /bin/sh
+--entrypoint /bin/sh \
 
 docker run -it --rm \
 -v /c/Users/Remi/Documents/McGurk/:/data:ro \
 -v /c/Users/Remi/Documents/McGurk/code/:/code/mcgurk \
 -v /c/Users/Remi/Documents/McGurk/derivatives/:/output \
-octave_spm_maumet:0.0.1 script '/code/mcgurk/fMRI_analysis/bids/run_first_level.m'
+spmcentral/spm:octave-latest script '/code/mcgurk/bids_fMRI_analysis/run_first_level.m'
 
-spmcentral/spm:octave-latest script '/code/mcgurk/fMRI_analysis/bids/run_first_level.m'
+script '/code/mcgurk/bids_fMRI_analysis/run_first_level.m'
+script '/code/mcgurk/bids_fMRI_analysis/run_preprocessing.m'
+eval "spm_BIDS('/data/rawdata')"
 
-octave_spm_maumet:0.0.1 script '/fMRI_analysis/pre_process_bids/run_preprocessing.m'
-
-spmcentral/spm:octave-latest script '/fMRI_analysis/pre_process_bids/run_preprocessing.m'
-
-octave_spm_maumet:0.0.1 script '/fMRI_analysis/pre_process_bids/run_preprocessing.m'
+spmcentral/spm:octave-latest
+spmcentral/spm:latest
 
 
-spmcentral/spm:octave-latest script '/code/run_analysis.m'
-spmcentral/spm:octave-latest eval "help spm_file_split"
-spmcentral/spm:octave-latest eval "spm_BIDS('/data/rawdata')"
-
-octave_spm_maumet:0.0.1
 
 
 docker run -it --rm \
--v /c/Users/Remi/Documents/McGurk/:/data:ro \
--v /c/Users/Remi/Documents/McGurk/code/fMRI_analysis/pre_process_bids/:/code \
--v /c/Users/Remi/Documents/McGurk/derivatives/:/output \
-spmcentral/spm:latest script '/code/run_analysis.m'
+-v /c/Users/Remi/Documents/BIDS/:/data:ro \
+-v /c/Users/Remi/Documents/BIDS/code/:/code \
+-v /c/Users/Remi/Documents/BIDS/derivatives:/output \
+spmcentral/spm:latest script '/code/MWE_dependencies.m'
+
+docker run -it --rm \
+-v /c/Users/Remi/Documents/BIDS/:/data:ro \
+-v /c/Users/Remi/Documents/BIDS/code/:/code \
+-v /c/Users/Remi/Documents/BIDS/derivatives:/output \
+spmcentral/spm:octave-latest  script '/code/MWE_dependencies.m'

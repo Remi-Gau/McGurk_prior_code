@@ -19,15 +19,15 @@ spm('defaults','FMRI')
 
 
 %% Set options, matlab path
-DATA_DIR = 'D:\BIDS\McGurk\';
+DATA_DIR = 'D:\Dropbox\BIDS\McGurk\';
 % DATA_DIR = '/data';
 
 % data set
-BIDS_DIR = fullfile(DATA_DIR, 'rawdata');
+BIDS_DIR = fullfile(DATA_DIR, 'derivatives', 'spm8_artrepair');
 
-OUTPUT_DIR = 'D:\BIDS\McGurk\derivatives';
+OUTPUT_DIR = 'D:\Dropbox\BIDS\McGurk\derivatives';
 % OUTPUT_DIR = '/output';
-OUTPUT_DIR = fullfile(OUTPUT_DIR, 'spm12_artrepair', 'group');
+OUTPUT_DIR = fullfile(OUTPUT_DIR, 'spm8_artrepair', 'group');
 
 CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
 % CODE_DIR = '/code/mcgurk/';
@@ -37,8 +37,12 @@ addpath(fullfile(CODE_DIR,'bids_fMRI_analysis', 'subfun'));
 
 
 %% get data set info
-BIDS = spm_BIDS(BIDS_DIR);
-subj_ls = spm_BIDS(BIDS, 'subjects');
+% BIDS = spm_BIDS(BIDS_DIR);
+% subj_ls = spm_BIDS(BIDS, 'subjects');
+subj_ls = dir(fullfile(BIDS_DIR, 'sub-*'));
+subj_ls = char({subj_ls.name}');
+subj_ls = cellstr(subj_ls(:,end-1:end))
+
 nb_subj = numel(subj_ls);
 
 % set up all the possible of combinations of GLM possible

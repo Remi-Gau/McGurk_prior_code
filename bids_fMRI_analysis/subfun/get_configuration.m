@@ -14,5 +14,9 @@ function cfg = get_configuration(all_GLMs, opt, iGLM)
         cfg.mvt = opt.mvt(all_GLMs(iGLM,10));
         cfg.concat = opt.concat(all_GLMs(iGLM,11));
         
+        if isfield(opt, 'prefix')
+            cfg.prefix = opt.prefix;
+        end
+        
 end
 

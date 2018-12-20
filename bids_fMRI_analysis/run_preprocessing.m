@@ -6,6 +6,8 @@
 clear
 clc
 
+
+
 %% Set options, matlab path
 N_DUMMY_SCANS = 5;
 MAX_N_SCANS = 325;
@@ -24,20 +26,30 @@ FILT_TYPE = 3;
 DESPIKE_TYPE = 4;
 
 
-DATA_DIR = 'C:\Users\Remi\Documents\McGurk';
+% containers
 % DATA_DIR = '/data';
+% OUTPUT_DIR = '/output';
+% CODE_DIR = '/code/mcgurk';
+% addpath(fullfile('/opt/spm12'));
+
+% windows matlab
+% DATA_DIR = 'C:\Users\Remi\Documents\McGurk';
+% OUTPUT_DIR = 'C:\Users\Remi\Documents\McGurk\derivatives';
+% CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
+
+% subsystem
+DATA_DIR = '/mnt/c/Users/Remi/Documents/McGurk/';
+OUTPUT_DIR = '/mnt/c/Users/Remi/Documents/McGurk/derivatives';
+CODE_DIR = '/mnt/c/Users/Remi/Documents/McGurk/code';
+addpath('/home/remi-gau/spm12')
 
 % data set
 BIDS_DIR = fullfile(DATA_DIR, 'rawdata');
 
-OUTPUT_DIR = 'C:\Users\Remi\Documents\McGurk\derivatives';
-% OUTPUT_DIR = '/output';
-
-CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
-% CODE_DIR = '/code/mcgurk';
+mkdir(OUTPUT_DIR)
+mkdir(fullfile(OUTPUT_DIR, 'spm12_artrepair'))
 
 % add spm12 and spmup to path
-% addpath(fullfile('/code/spm12'));
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'spmup')));
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'art_repair')));
 addpath(fullfile(CODE_DIR,'bids_fMRI_analysis', 'subfun'));
@@ -49,7 +61,7 @@ addpath(fullfile(CODE_DIR,'bids_fMRI_analysis', 'subfun'));
 choices = struct(...
     'outdir', fullfile(OUTPUT_DIR, 'spm12_artrepair'), ...
     'keep_data', 'on',  ...
-    'overwrite_data', 'off');
+    'overwrite_data', 'on');
 
 [~,~,~] = mkdir(choices.outdir);
 cd(choices.outdir)
@@ -77,15 +89,17 @@ for isubj = 1:nb_subj
 
         [filepath, name, ext] = spm_fileparts(subjects{isubj}.func{irun, 1});
  
-        three_dim_files = spm_file_split(subjects{isubj}.func{irun, 1}, filepath);
+        spm_file_split(subjects{isubj}.func{irun, 1}, filepath);
+        
+        three_dim_files = spm_select('FPList', filepath, ['^' name '_00.*' ext '$']);
 
 
         if numel(three_dim_files)>MAX_N_SCANS
-            files_to_delete = three_dim_files([1:N_DUMMY_SCANS MAX_N_SCANS:end]);
+            files_to_delete = three_dim_files([1:N_DUMMY_SCANS MAX_N_SCANS:end],:);
         else
-            files_to_delete = three_dim_files(1:N_DUMMY_SCANS);
+            files_to_delete = three_dim_files(1:N_DUMMY_SCANS,:);
         end
-        delete(files_to_delete.fname)
+        delete(files_to_delete)
 
         fprintf('repairing slices: sub %s run %s \n', ...
             num2str(isubj), num2str(irun))
@@ -102,7 +116,6 @@ for isubj = 1:nb_subj
     spm_jobman('run', matlabbatch)
 
 end
-
 
 
 %% coregister to MNI
