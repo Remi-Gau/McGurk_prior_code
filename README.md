@@ -4,6 +4,8 @@ This code relates to the experiment and paper [How prior expectations shape mult
 
 I have uploaded the original results of this study on [neurovault](https://neurovault.org/collections/4172/).
 
+More information and the stimuli are available on the corresponding [OSF project](https://osf.io/hby4j/).
+
 ## Original version of the code
 The script to run (orginally with matlab 2010a and psychtoolbox version 3.09) the fMRI and behavioral experiments are in the `fMRI` and `psychophysics` folders respectively. Still in need of better documentation. :-(
 
