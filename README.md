@@ -2,7 +2,7 @@
 
 This code relates to the experiment and paper [How prior expectations shape multisensory perception](10.1016/j.neuroimage.2015.09.045).
 
-I have uploaded the original results of this study on [neurovault](https://neurovault.org/). It is currently on a private project and I am checking if this fMRI study had the proper ethical permission to make this type of group level results openly available. Bear with me but do get in touch if you want to get access to those statistical maps in the meantime.
+I have uploaded the original results of this study on [neurovault](https://neurovault.org/collections/4172/).
 
 ## Original version of the code
 The script to run (orginally with matlab 2010a and psychtoolbox version 3.09) the fMRI and behavioral experiments are in the `fMRI` and `psychophysics` folders respectively. Still in need of better documentation. :-(
