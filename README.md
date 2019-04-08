@@ -1,6 +1,6 @@
 # How prior expectations shape multisensory perception
 
-This code relates to the experiment and paper [How prior expectations shape multisensory perception](10.1016/j.neuroimage.2015.09.045).
+This code relates to the experiment and paper [How prior expectations shape multisensory perception](https://www.ncbi.nlm.nih.gov/pubmed/26419391).
 
 I have uploaded the original results of this study on [neurovault](https://neurovault.org/collections/4172/).
 
