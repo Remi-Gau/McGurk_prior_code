@@ -27,8 +27,7 @@ TASK = 'contextmcgurk';
 DATA_DIR = '/data';
 OUTPUT_DIR = '/output/spm12_artrepair';
 CODE_DIR = '/code/mcgurk';
-% addpath(fullfile('/opt/spm12'));
-% spm_get_defaults('stats.maxmem', 2^20)
+addpath(fullfile('/opt/spm12'));
 
 % windows matlab
 % DATA_DIR = 'C:\Users\Remi\Documents\McGurk';
@@ -47,13 +46,13 @@ CODE_DIR = '/code/mcgurk';
 
 % add spm12 and spmup to path
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'spmup')));
-addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'art_repair')));
+% addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'art_repair')));
 addpath(genpath(fullfile(CODE_DIR, 'toolboxes', 'GLMdenoise')));
 
 addpath(fullfile(CODE_DIR,'bids_fMRI_analysis', 'subfun'));
 
-global defaults;
-defaults = spm_get_defaults;
+% global defaults;
+% defaults = spm_get_defaults; % set defaults for memory usage using subfun/spm_defaults.m
 
 
 % data set
@@ -140,6 +139,8 @@ for isubj = 1%:nb_subj
             OUTPUT_DIR, ...
             ['sub-' subj_ls{isubj}], analysis_dir );
         mkdir(analysis_dir)
+        
+        delete(fullfile(analysis_dir,'SPM.mat'))
         
         if cfg.RT_correction
             % specify a dummy GLM to get one regressor for all the RTs

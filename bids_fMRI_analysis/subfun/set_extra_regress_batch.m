@@ -1,7 +1,5 @@
 function matlabbatch = set_extra_regress_batch(matlabbatch, idx, irun, opt, cfg, blocks, RT_regressors_col)
 
-matlabbatch{idx}.spm.stats.fmri_spec.sess(1,irun).regress = [];
-
 % Inputs the reaction time parametric modulator regressors
 if cfg.RT_correction
     for iRT_reg = 1:size(RT_regressors_col{irun},2)
@@ -26,9 +24,9 @@ if ~strcmp(cfg.block_type, 'none')
     % if we have regular blocks we enter them as normal conditions to be
     % convolved later with the HRF  by the SPM machinery
     if strcmp(cfg.block_type(end), 's')
-                
+        
         for iBlock = 1:size(blocks,2)
-
+            
             matlabbatch{idx}.spm.stats.fmri_spec.sess(1,irun).cond(1,end+1).name = ...
                 blocks(irun,iBlock).name;
             matlabbatch{idx}.spm.stats.fmri_spec.sess(1,irun).cond(1,end).onset = ...
@@ -42,7 +40,7 @@ if ~strcmp(cfg.block_type, 'none')
             
         end
         
-    % In this case we have blocks that rise exponentially so we define them manually    
+        % In this case we have blocks that rise exponentially so we define them manually
     elseif strcmp(cfg.block_type(end), 'e')
         
         nb_vols = size(matlabbatch{idx}.spm.stats.fmri_spec.sess(1,irun).scans,1);
@@ -62,12 +60,17 @@ if ~strcmp(cfg.block_type, 'none')
     
 end
 
+% if isfield(matlabbatch{idx}.spm.stats.fmri_spec.sess(1,irun), 'regress')
+%     matlabbatch{idx}.spm.stats.fmri_spec.sess(1,irun).regress = ...
+%     struct('name', '', 'name', []);
+% end
+
 end
 
 function block_parameters = get_block_parameters(blocks, block_duration, irun)
 
 for iBlock =  1:size(blocks,2)
-
+    
     block_parameters(iBlock).onsets_1 = blocks(irun,iBlock).onsets_1; %#ok<*AGROW>
     block_parameters(iBlock).onsets_2 = blocks(irun,iBlock).onsets_2;
     block_parameters(iBlock).duration = repmat(block_duration, ...
@@ -83,6 +86,6 @@ for iBlock =  1:size(blocks,2)
         block_parameters(iBlock).duration(block_idx+1) = [];
     end
 end
-    
+
 end
 

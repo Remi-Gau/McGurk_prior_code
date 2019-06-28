@@ -50,7 +50,8 @@ for iCdt = 1:numel(cdt_ls)
     
     % add the suffix '*bf(1)' to look for regressors that are convolved
     % with canonical HRF
-    idx = contains(SPM.xX.name', [cdt_name '*bf(1)']);
+    idx = strfind(SPM.xX.name', [cdt_name '*bf(1)']);
+    idx = ~cellfun('isempty', idx); %#ok<STRCL1>
     
     % in case we are dealing with a block regressors that was added
     % manually and not convolved automatically by SPM
@@ -82,11 +83,14 @@ all_events_ls = {...
 weight_vec = init_weight_vector(SPM);
 
 for iCdt = 1:numel(all_events_ls)
-    idx = contains(SPM.xX.name', [all_events_ls{iCdt} '*bf(1)']);
+    idx = strfind(SPM.xX.name', [all_events_ls{iCdt} '*bf(1)']);
+    idx = ~cellfun('isempty', idx); %#ok<STRCL1>
     weight_vec(idx) = sum(idx);
 end
 
 [weight_vec, cdt_name] = warning_dummy_contrast(weight_vec, 'all_events');
+
+weight_vec = norm_weight_vector(weight_vec);
 
 matlabbatch = set_cdt_contrast_batch(matlabbatch, cdt_name, weight_vec, numel(cdt_ls)+1);
 
@@ -96,11 +100,12 @@ all_blocks_ls = {...
     ' con_block', ...
     ' inc_block'};
 
-weight_vec = norm_weight_vector(weight_vec);
+weight_vec = init_weight_vector(SPM);
 
 for iCdt = 1:numel(all_blocks_ls)
     cdt_name = all_blocks_ls{iCdt};
-    idx = contains(SPM.xX.name', [cdt_name '*bf(1)']);
+    idx = strfind(SPM.xX.name', [cdt_name '*bf(1)']);
+    idx = ~cellfun('isempty', idx); %#ok<STRCL1>
     idx = search_non_convolved_reg(idx, cdt_name, SPM);
     weight_vec(idx) = sum(idx);
 end
@@ -120,7 +125,8 @@ function idx = search_non_convolved_reg(idx, cdt_name, SPM)
 if sum(idx)==0
     warning('No regressor was found for condition %s. Trying with %s', ...
         [cdt_name '*bf(1)'], cdt_name)
-    idx = contains(SPM.xX.name', cdt_name);
+    idx = strfind(SPM.xX.name', cdt_name);
+    idx = ~cellfun('isempty', idx); %#ok<STRCL1>
 end
 end
 
@@ -133,6 +139,8 @@ else
     warning('no regressor was found for condition %s, creating a dummy contrast', ...
         cdt_name)
     cdt_name = 'dummy_contrast';
+    weight_vec = zeros(size(weight_vec));
+    weight_vec(end) = 1;
 end
 
 end

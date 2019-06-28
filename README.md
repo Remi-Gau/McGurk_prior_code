@@ -6,13 +6,13 @@ I have uploaded the original results of this study on [neurovault](https://neuro
 
 
 ## Original version of the code
-The script to run (orginally with matlab 2010a and psychtoolbox version 3.09) the fMRI and behavioral experiments are in the `fMRI` and `psychophysics` folders respectively. Still in need of better documentation. :-(
+The script to run (originally with matlab 2010a and psychtoolbox version 3.09) the fMRI and behavioral experiments are in the `fMRI` and `psychophysics` folders respectively. Still in need of better documentation. :-(
 
 The original stimuli are on a private OSF project as I am not sure we have from the actors on the videos to make those fully open. Do get in touch if you want to know more.
 
 The original scripts to run the analysis presented in the paper are in the `fMRI_analysis` folder but are really poorly documented. So they are here mostly for posterity and archival purposes.
 
-Scripts for the many other analysis that we tried and were not published or mentioned in the paper are kept in an `archive` folder on the `archives` branch of this repository.
+Scripts for the many other analysis that we tried but were not published are kept in an `archive` folder on the `archives` branch of this repository.
 
 
 ## BIDS data
@@ -79,9 +79,9 @@ In general this work is clearer and better documented although not yet perfect. 
   -   `OFF` (\*)
   -   `ON`
 
-While cleaning and documenting this project I realized that some pre-processing pipelines might have had some error (or poor practice) in them but because of bad documenting, I am not sure whether they were the pipeline used for the published results. To check whether this affected the results I have also run processing pipelines for those options. Those included:
+While cleaning and documenting this project I realized that some pre-processing pipelines might have had some error (or poor practice) in them but because of bad documenting, I am not sure whether they were the pipeline used for the published results. To check whether this affected the results I will also run processing pipelines for those options. Those included:
 -   running the slice-timing using the first slice as reference and not the mid-volume slice
--   normalizing the data using 2 mm rather than the original EPI resolution (3 mm). See [here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5487467/) why this might be a problem if not controlling for final image smoothness when using random field theory to control for multiple correction.
+-   normalizing the data using 2 mm rather than the original EPI resolution (3 mm). See [here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5487467/) why this might be a problem if not controlling for final image smoothness when using random field theory to control for multiple correction. Potential issue: changing res without changing smoothing will affect FWE-MCC with RFT but not the beta estimate.
 
 Some other pipeline might also have some unorthodox implementation of toolboxes. Notably we originally used the GLMdenoise toolbox to compute noise regressors that we then added to our SPM design matrix. I decided to keep those implementations to see what results we would have got.
 
@@ -95,3 +95,9 @@ For more information see:
 -   vibration of effect
 
 Another thing to investigate would be to run model selection on the result of this pipeline (e.g MACS toolbox)
+
+
+Compare original results to:
+- new GLM pipeline on original preprocessed dataset (effect of GLM)
+- new GLM pipeline on new preprocessed pipeline (effect of GLM + preprocessing)
+- on fMRIprep preprocessed data??

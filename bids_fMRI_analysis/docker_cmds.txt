@@ -4,7 +4,7 @@ docker run -it --rm \
 -v /c/Users/Remi/Documents/McGurk/:/data:ro \
 -v /c/Users/Remi/Documents/McGurk/code/:/code/mcgurk \
 -v /c/Users/Remi/Documents/McGurk/derivatives/:/output \
-spmcentral/spm:octave-latest script '/code/mcgurk/bids_fMRI_analysis/run_first_level.m'
+spmcentral/spm:octave-latest script '/code/mcgurk/bids_fMRI_analysis/run_preprocessing.m'
 
 script '/code/mcgurk/bids_fMRI_analysis/run_first_level.m'
 script '/code/mcgurk/bids_fMRI_analysis/run_preprocessing.m'

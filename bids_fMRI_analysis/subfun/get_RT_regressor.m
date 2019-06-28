@@ -2,6 +2,8 @@ function RT_regressors = get_RT_regressor(analysis_dir, data, cdt, opt, cfg)
 % sets up an fMRI design with no data and then extracts parametric
 % modulators of RT for all events pooled together
 
+fprintf('\n Computing RT regressors\n')
+
 nb_runs = numel(data);
 
 median_RT = cat(1,cdt(:).RT);

@@ -27,9 +27,9 @@ DESPIKE_TYPE = 4;
 
 
 % containers
-% DATA_DIR = '/data';
-% OUTPUT_DIR = '/output';
-% CODE_DIR = '/code/mcgurk';
+DATA_DIR = '/data';
+OUTPUT_DIR = '/output';
+CODE_DIR = '/code/mcgurk';
 % addpath(fullfile('/opt/spm12'));
 
 % windows matlab
@@ -38,10 +38,10 @@ DESPIKE_TYPE = 4;
 % CODE_DIR = 'C:\Users\Remi\Documents\McGurk\code';
 
 % subsystem
-DATA_DIR = '/mnt/c/Users/Remi/Documents/McGurk/';
-OUTPUT_DIR = '/mnt/c/Users/Remi/Documents/McGurk/derivatives';
-CODE_DIR = '/mnt/c/Users/Remi/Documents/McGurk/code';
-addpath('/home/remi-gau/spm12')
+% DATA_DIR = '/mnt/c/Users/Remi/Documents/McGurk/';
+% OUTPUT_DIR = '/mnt/c/Users/Remi/Documents/McGurk/derivatives';
+% CODE_DIR = '/mnt/c/Users/Remi/Documents/McGurk/code';
+% addpath('/home/remi-gau/spm12')
 
 % data set
 BIDS_DIR = fullfile(DATA_DIR, 'rawdata');
