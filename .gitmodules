@@ -6,4 +6,4 @@
 	url = https://github.com/Remi-Gau/spmup.git
 [submodule "toolboxes/GLMdenoise"]
 	path = toolboxes/GLMdenoise
-	url = https://github.com/Remi-Gau/GLMdenoise.git
+	url = https://github.com/cvnlab/GLMdenoise.git
